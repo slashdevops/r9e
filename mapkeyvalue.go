@@ -1,6 +1,7 @@
-package muttex
+package r9e
 
 import (
+	"sort"
 	"sync"
 )
 
@@ -8,19 +9,25 @@ type mapKeyValueOptions struct {
 	size int
 }
 
+// MapKeyValueOptions are the options for MapKeyValue.
 type MapKeyValueOptions func(*mapKeyValueOptions)
 
+// WithSize sets the size of the MapKeyValue.
 func WithSize(size int) MapKeyValueOptions {
 	return func(kv *mapKeyValueOptions) {
 		kv.size = size
 	}
 }
 
+// MapKeyValue is a generic key-value store container that is thread-safe.
+// This use a golang native map data structure as underlying data structure and a mutex to
+// protect the data.
 type MapKeyValue[K comparable, T any] struct {
 	mu   sync.RWMutex
 	data map[K]T
 }
 
+// NewMapKeyValue returns a new MapKeyValue container.
 func NewMapKeyValue[K comparable, T any](options ...MapKeyValueOptions) *MapKeyValue[K, T] {
 	// parse options
 	kvo := mapKeyValueOptions{}
@@ -33,7 +40,8 @@ func NewMapKeyValue[K comparable, T any](options ...MapKeyValueOptions) *MapKeyV
 	}
 }
 
-func (r *MapKeyValue[K, T]) Get(key K) (T, bool) {
+// Get returns the value associated with the key.
+func (r *MapKeyValue[K, T]) GetCheck(key K) (T, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -41,6 +49,15 @@ func (r *MapKeyValue[K, T]) Get(key K) (T, bool) {
 	return value, ok
 }
 
+// Get returns the value associated with the key.
+func (r *MapKeyValue[K, T]) Get(key K) T {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return r.data[key]
+}
+
+// Set sets the value associated with the key.
 func (r *MapKeyValue[K, T]) Set(key K, value T) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -48,6 +65,7 @@ func (r *MapKeyValue[K, T]) Set(key K, value T) {
 	r.data[key] = value
 }
 
+// Delete deletes the value associated with the key.
 func (r *MapKeyValue[K, T]) Delete(key K) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -55,6 +73,7 @@ func (r *MapKeyValue[K, T]) Delete(key K) {
 	delete(r.data, key)
 }
 
+// Clear deletes all key-value pairs.
 func (r *MapKeyValue[K, T]) Clear() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -62,6 +81,7 @@ func (r *MapKeyValue[K, T]) Clear() {
 	r.data = make(map[K]T)
 }
 
+// Len returns the number of key-value pairs stored in the container.
 func (r *MapKeyValue[K, T]) Len() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -69,6 +89,7 @@ func (r *MapKeyValue[K, T]) Len() int {
 	return len(r.data)
 }
 
+// Keys returns all keys stored in the container.
 func (r *MapKeyValue[K, T]) Keys() []K {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -80,6 +101,7 @@ func (r *MapKeyValue[K, T]) Keys() []K {
 	return keys
 }
 
+// Values returns all values stored in the container.
 func (r *MapKeyValue[K, T]) Values() []T {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -91,6 +113,7 @@ func (r *MapKeyValue[K, T]) Values() []T {
 	return values
 }
 
+// Each calls the given function for each key-value pair in the container.
 func (r *MapKeyValue[K, T]) Each(fn func(key K, value T)) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -100,6 +123,7 @@ func (r *MapKeyValue[K, T]) Each(fn func(key K, value T)) {
 	}
 }
 
+// EachKey calls the given function for each key in the container.
 func (r *MapKeyValue[K, T]) EachKey(fn func(key K)) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -109,6 +133,7 @@ func (r *MapKeyValue[K, T]) EachKey(fn func(key K)) {
 	}
 }
 
+// EachValue calls the given function for each value in the container.
 func (r *MapKeyValue[K, T]) EachValue(fn func(value T)) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -118,6 +143,7 @@ func (r *MapKeyValue[K, T]) EachValue(fn func(value T)) {
 	}
 }
 
+// Clone returns a new MapKeyValue with a copy of the underlying data.
 func (r *MapKeyValue[K, T]) Clone() *MapKeyValue[K, T] {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -129,6 +155,7 @@ func (r *MapKeyValue[K, T]) Clone() *MapKeyValue[K, T] {
 	return clone
 }
 
+// CloneAndClear returns a new MapKeyValue with a copy of the underlying data and clears the container.
 func (r *MapKeyValue[K, T]) CloneAndClear() *MapKeyValue[K, T] {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -141,6 +168,7 @@ func (r *MapKeyValue[K, T]) CloneAndClear() *MapKeyValue[K, T] {
 	return clone
 }
 
+// Map returns a new MapKeyValue after applying the given function fn to each key-value pair.
 func (r *MapKeyValue[K, T]) Map(fn func(key K, value T) (newKey K, newValue T)) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -153,6 +181,7 @@ func (r *MapKeyValue[K, T]) Map(fn func(key K, value T) (newKey K, newValue T)) 
 	return m
 }
 
+// MapKey returns a new MapKeyValue after applying the given function fn to each key.
 func (r *MapKeyValue[K, T]) MapKey(fn func(key K) K) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -165,6 +194,7 @@ func (r *MapKeyValue[K, T]) MapKey(fn func(key K) K) *MapKeyValue[K, T] {
 	return m
 }
 
+// MapValue returns a new MapKeyValue after applying the given function fn to each value.
 func (r *MapKeyValue[K, T]) MapValue(fn func(value T) T) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -177,6 +207,7 @@ func (r *MapKeyValue[K, T]) MapValue(fn func(value T) T) *MapKeyValue[K, T] {
 	return m
 }
 
+// Filter returns a new MapKeyValue after applying the given function fn to each key-value pair.
 func (r *MapKeyValue[K, T]) Filter(fn func(key K, value T) bool) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -190,6 +221,7 @@ func (r *MapKeyValue[K, T]) Filter(fn func(key K, value T) bool) *MapKeyValue[K,
 	return m
 }
 
+// FilterKey returns a new MapKeyValue after applying the given function fn to each key.
 func (r *MapKeyValue[K, T]) FilterKey(fn func(key K) bool) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -203,6 +235,7 @@ func (r *MapKeyValue[K, T]) FilterKey(fn func(key K) bool) *MapKeyValue[K, T] {
 	return m
 }
 
+// FilterValue returns a new MapKeyValue after applying the given function fn to each value.
 func (r *MapKeyValue[K, T]) FilterValue(fn func(value T) bool) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -216,6 +249,8 @@ func (r *MapKeyValue[K, T]) FilterValue(fn func(value T) bool) *MapKeyValue[K, T
 	return m
 }
 
+// Partition returns two new MapKeyValue. One with all the elements that satisfy the predicate and
+// another with the rest. The predicate is applied to each element.
 func (r *MapKeyValue[K, T]) Partition(fn func(key K, value T) bool) (match, others *MapKeyValue[K, T]) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -232,6 +267,8 @@ func (r *MapKeyValue[K, T]) Partition(fn func(key K, value T) bool) (match, othe
 	return
 }
 
+// PartitionKey returns two new MapKeyValue. One with all the elements that satisfy the predicate and
+// another with the rest. The predicate is applied to each key.
 func (r *MapKeyValue[K, T]) PartitionKey(fn func(key K) bool) (match, others *MapKeyValue[K, T]) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -248,6 +285,8 @@ func (r *MapKeyValue[K, T]) PartitionKey(fn func(key K) bool) (match, others *Ma
 	return
 }
 
+// PartitionValue returns two new MapKeyValue. One with all the elements that satisfy the predicate and
+// another with the rest. The predicate is applied to each value.
 func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others *MapKeyValue[K, T]) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -262,4 +301,21 @@ func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others
 		}
 	}
 	return
+}
+
+func (r *MapKeyValue[K, T]) SortKeys(less func(key1, key2 K) bool) *MapKeyValue[K, T] {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	keys := r.Keys()
+
+	sort.Slice(keys, func(i, j int) bool {
+		return less(keys[i], keys[j])
+	})
+
+	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	for _, key := range keys {
+		m.Set(key, r.data[key])
+	}
+	return m
 }
