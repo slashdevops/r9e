@@ -41,7 +41,15 @@ func NewMapKeyValue[K comparable, T any](options ...MapKeyValueOptions) *MapKeyV
 	}
 }
 
-// Get returns the value associated with the key.
+// Set sets the value associated with the key.
+func (r *MapKeyValue[K, T]) Set(key K, value T) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.data[key] = value
+}
+
+// GetCheck returns the value associated with the key if this exist also a if this exist.
 func (r *MapKeyValue[K, T]) GetCheck(key K) (T, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -56,14 +64,6 @@ func (r *MapKeyValue[K, T]) Get(key K) T {
 	defer r.mu.RUnlock()
 
 	return r.data[key]
-}
-
-// Set sets the value associated with the key.
-func (r *MapKeyValue[K, T]) Set(key K, value T) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	r.data[key] = value
 }
 
 // Delete deletes the value associated with the key.
