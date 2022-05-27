@@ -373,7 +373,7 @@ func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others
 	return
 }
 
-// SortKeys returns a new MapKeyValue after sorting the keys using the given sortFn function.
+// SortKeys returns a []*K (keys) after sorting the keys using the given sortFn function.
 func (r *MapKeyValue[K, T]) SortKeys(sortFn func(key1, key2 K) bool) []*K {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
