@@ -1,0 +1,64 @@
+---
+name: "Release"
+
+# https://help.github.com/es/actions/reference/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
+on:
+  push:
+    tags:
+      - v[0-9].[0-9]+.[0-9]*
+
+env:
+  GO_VERSION: 1.18
+
+permissions:
+  id-token: write
+  security-events: write
+  actions: read
+  contents: write
+  pull-requests: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+        id: go
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: make test
+
+  create_github_release:
+    name: Create Github Release
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+        id: go
+
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Show workspace files
+        run: tree .
+
+      - name: Create Release
+        id: create_github_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          # body: |
+          #   See the file: CHANGELOG.md
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}

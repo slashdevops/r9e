@@ -85,7 +85,7 @@ func (r *MapKeyValue[K, T]) Clear() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	r.data = make(map[K]T)
+	r.data = make(map[K]T, 0)
 }
 
 // Size returns the number of key-value pairs stored in the container.
