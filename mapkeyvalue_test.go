@@ -306,7 +306,7 @@ func TestDelete(t *testing.T) {
 		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
 
 		if kv.Size() != 3 {
-			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
 		}
 
 		value := kv.Get("Archimedes")
@@ -321,7 +321,7 @@ func TestDelete(t *testing.T) {
 		kv.Delete("Archimedes")
 
 		if kv.Size() != 2 {
-			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+			t.Errorf("Expected size to be %v, got %v", 2, kv.Size())
 		}
 
 		value = kv.Get("Golden Ratio")
@@ -342,13 +342,118 @@ func TestDelete(t *testing.T) {
 		kv := NewMapKeyValue[string, testStruct]()
 
 		if kv.Size() != 0 {
-			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
 		}
 
 		kv.Delete("Archimedes")
 
 		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+	})
+}
+
+func TestClear(t *testing.T) {
+	t.Run("test Clear for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
 			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		value := kv.Get("Archimedes")
+
+		if value.Name != "This is Archimedes' Constant (Pi)" {
+			t.Errorf("Expected value to be %s, got %s", "This is Archimedes' Constant (Pi)", value.Name)
+		}
+		if value.value != 3.1415 {
+			t.Errorf("Expected value to be %v, got %v", 3.1415, value.value)
+		}
+
+		kv.Clear()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+	})
+
+	t.Run("test Clear for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+
+		kv.Clear()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+	})
+}
+
+func TestSize(t *testing.T) {
+	t.Run("test Size for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		kv.Delete("Archimedes")
+
+		if kv.Size() != 2 {
+			t.Errorf("Expected size to be %v, got %v", 2, kv.Size())
+		}
+
+		kv.Delete("Euler")
+
+		if kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		kv.Clear()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+	})
+
+	t.Run("test Size for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+
+		kv.Delete("Euler")
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
 		}
 	})
 }

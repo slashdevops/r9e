@@ -74,7 +74,7 @@ func (r *MapKeyValue[K, T]) Delete(key K) {
 	delete(r.data, key)
 }
 
-// Clear deletes all key-value pairs.
+// Clear deletes all key-value pairs in the container.
 func (r *MapKeyValue[K, T]) Clear() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
