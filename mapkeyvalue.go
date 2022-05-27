@@ -198,7 +198,7 @@ func (r *MapKeyValue[K, T]) CloneAndClear() *MapKeyValue[K, T] {
 	for key, value := range r.data {
 		clone.Set(key, value)
 	}
-	r.Clear()
+	r.data = make(map[K]T)
 	return clone
 }
 

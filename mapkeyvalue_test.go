@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
@@ -719,6 +720,210 @@ func TestEach(t *testing.T) {
 		kv.Each(func(key string, value testStruct) {
 			t.Errorf("Expected Each to not be called, got %v", true)
 		})
+	})
+}
+
+func TestEachKey(t *testing.T) {
+	t.Run("test EachKey for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		kv.EachKey(func(key string) {
+			if key != "Archimedes" && key != "Euler" && key != "Golden Ratio" {
+				t.Errorf("Expected key to be %v, got %v", true, key)
+			}
+		})
+	})
+
+	t.Run("test EachKey for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.EachKey(func(key string) {
+			t.Errorf("Expected EachKey to not be called, got %v", true)
+		})
+	})
+}
+
+func TestEachValue(t *testing.T) {
+	t.Run("test EachValue for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		kv.EachValue(func(value testStruct) {
+			if value.Name != "This is Archimedes' Constant (Pi)" && value.Name != "This is Euler's Number (e)" && value.Name != "This is The Golden Ratio" {
+				t.Errorf("Expected value to be %v, got %v", true, value)
+			}
+
+			if value.value != 3.1415 && value.value != 2.7182 && value.value != 1.6180 {
+				t.Errorf("Expected value to be %v, got %v", true, value)
+			}
+		})
+	})
+
+	t.Run("test EachValue for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.EachValue(func(value testStruct) {
+			t.Errorf("Expected EachValue to not be called, got %v", true)
+		})
+	})
+}
+
+func TestClone(t *testing.T) {
+	t.Run("test Clone for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		kvClone := kv.Clone()
+
+		if kvClone.Size() != kv.Size() {
+			t.Errorf("Expected size to be %v, got %v", 3, kvClone.Size())
+		}
+
+		if reflect.DeepEqual(kv, kvClone) == false {
+			t.Errorf("Expected Clone to be equal to original, got %v", true)
+		}
+
+		kvKeys := kv.Keys()
+		kvValues := kv.Values()
+
+		kvCloneKeys := kvClone.Keys()
+
+		sort.Strings(kvKeys)
+		sort.Strings(kvCloneKeys)
+
+		if reflect.DeepEqual(kvKeys, kvCloneKeys) == false {
+			t.Errorf("Expected keys to be equal, got %v", true)
+		}
+
+		for _, kvValue := range kvValues {
+			if kvClone.ContainsValue(kvValue) == false {
+				t.Errorf("Expected Clone to contain value, got %v", true)
+			}
+		}
+	})
+
+	t.Run("test Clone for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kvClone := kv.Clone()
+
+		if kvClone.Size() != kv.Size() {
+			t.Errorf("Expected size to be %v, got %v", 3, kvClone.Size())
+		}
+
+		if reflect.DeepEqual(kv, kvClone) == false {
+			t.Errorf("Expected Clone to be equal to original, got %v", true)
+		}
+	})
+}
+
+func TestCloneAndClear(t *testing.T) {
+	t.Run("test CloneAndClear for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		kvClone := kv.CloneAndClear()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+
+		if kvClone.Size() == kv.Size() {
+			t.Errorf("Expected size to be %v, got %v", 3, kvClone.Size())
+		}
+
+		if reflect.DeepEqual(kv, kvClone) == true {
+			t.Errorf("Expected Clone to be not equal to original, got %v", true)
+		}
+
+		kvKeys := kv.Keys()
+		kvCloneKeys := kvClone.Keys()
+
+		sort.Strings(kvKeys)
+		sort.Strings(kvCloneKeys)
+
+		if reflect.DeepEqual(kvKeys, kvCloneKeys) == true {
+			t.Errorf("Expected keys to be not equal, got %v", true)
+		}
+	})
+
+	t.Run("test CloneAndClear for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kvClone := kv.CloneAndClear()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+
+		if kvClone.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 3, kvClone.Size())
+		}
+
+		if reflect.DeepEqual(kv, kvClone) == false {
+			t.Errorf("Expected Clone to be equal to original, got %v", true)
+		}
 	})
 }
 
