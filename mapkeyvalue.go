@@ -211,10 +211,13 @@ func (r *MapKeyValue[K, T]) DeepEqual(kv *MapKeyValue[K, T]) bool {
 		return false
 	}
 
-	if reflect.DeepEqual(r, kv) {
-		return true
+	for key, value := range r.data {
+		if !reflect.DeepEqual(value, kv.Get(key)) {
+			return false
+		}
 	}
-	return false
+
+	return true
 }
 
 // Map returns a new MapKeyValue after applying the given function fn to each key-value pair.

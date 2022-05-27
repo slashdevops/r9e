@@ -927,6 +927,63 @@ func TestCloneAndClear(t *testing.T) {
 	})
 }
 
+func TestDeepEqual(t *testing.T) {
+	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv1 := NewMapKeyValue[string, testStruct]()
+		kv2 := NewMapKeyValue[string, testStruct]()
+
+		kv1.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv1.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv1.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		kv2.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv2.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv2.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv1.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv1.Size())
+		}
+		if kv2.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv2.Size())
+		}
+
+		if kv1.DeepEqual(kv2) == false {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+
+		if kv2.DeepEqual(kv1) == false {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+	})
+
+	t.Run("test DeepEqual for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv1 := NewMapKeyValue[string, testStruct]()
+		kv2 := NewMapKeyValue[string, testStruct]()
+
+		if kv1.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv1.Size())
+		}
+		if kv2.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv2.Size())
+		}
+
+		if kv1.DeepEqual(kv2) == false {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+		if kv2.DeepEqual(kv1) == false {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+	})
+}
+
 // **************************************************
 // ******************** Examples ********************
 
