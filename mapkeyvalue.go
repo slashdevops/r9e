@@ -90,12 +90,29 @@ func (r *MapKeyValue[K, T]) Size() int {
 	return len(r.data)
 }
 
+// IsEmpty returns true if the container is empty.
 func (r *MapKeyValue[K, T]) IsEmpty() bool {
 	return r.Size() == 0
 }
 
+// IsFull returns true if the container has elements.
 func (r *MapKeyValue[K, T]) IsFull() bool {
 	return r.Size() != 0
+}
+
+// DeepEqual returns true if the value is deep equal to the MapKeyValue
+func (r *MapKeyValue[K, T]) DeepEqual(kv *MapKeyValue[K, T]) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	if r.Size() != kv.Size() {
+		return false
+	}
+
+	if reflect.DeepEqual(r, kv) {
+		return true
+	}
+	return false
 }
 
 // ContainsKey returns true if the key is in the container.
@@ -335,6 +352,7 @@ func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others
 	return
 }
 
+// SortKeys returns a new MapKeyValue after sorting the keys.
 func (r *MapKeyValue[K, T]) SortKeys(less func(key1, key2 K) bool) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()

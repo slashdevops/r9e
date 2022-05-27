@@ -52,7 +52,8 @@ func init() {
 	}
 }
 
-// ******************** Test ********************
+// **************************************************
+// ******************** Tests ***********************
 func TestNewMapKeyValue(t *testing.T) {
 	t.Run("test NewMapKeyValue[int, int] with capacity", func(t *testing.T) {
 		kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
@@ -176,6 +177,54 @@ func TestNewMapKeyValue(t *testing.T) {
 	})
 }
 
+func TestGetCheck(t *testing.T) {
+	t.Run("test TestGetCheck for  NewMapKeyValue[string, struct] key exist", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+
+		if kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		value, ok := kv.GetCheck("Archimedes")
+		if !ok {
+			t.Errorf("Expected GetCheck to return true, got %v", ok)
+		}
+
+		if value.Name != "This is Archimedes' Constant (Pi)" {
+			t.Errorf("Expected value to be %s, got %s", "This is Archimedes' Constant (Pi)", value.Name)
+		}
+		if value.value != 3.1415 {
+			t.Errorf("Expected value to be %v, got %v", 3.1415, value.value)
+		}
+	})
+
+	t.Run("test TestGetCheck for  NewMapKeyValue[string, struct] key doesn't exist", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+
+		if kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		_, ok := kv.GetCheck("Euler")
+		if ok {
+			t.Errorf("Expected GetCheck to return true, got %v", ok)
+		}
+	})
+}
+
+// **************************************************
 // ******************** Examples ********************
 
 // Using int data types
@@ -247,7 +296,8 @@ func Example() {
 	})
 }
 
-// ******************** Benchmarks ********************
+// **************************************************
+// ******************** Benchmarks ******************
 func BenchmarkMapKeyValue_Set_int_int(b *testing.B) {
 	kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
 
