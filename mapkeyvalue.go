@@ -374,7 +374,7 @@ func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others
 }
 
 // SortKeys returns a new MapKeyValue after sorting the keys using the given sortFn function.
-func (r *MapKeyValue[K, T]) SortKeys(sortFn func(key1, key2 K) bool) *MapKeyValue[K, T] {
+func (r *MapKeyValue[K, T]) SortKeys(sortFn func(key1, key2 K) bool) []*K {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -384,30 +384,31 @@ func (r *MapKeyValue[K, T]) SortKeys(sortFn func(key1, key2 K) bool) *MapKeyValu
 		return sortFn(keys[i], keys[j])
 	})
 
-	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
-	for _, key := range keys {
-		m.Set(key, r.data[key])
+	m := make([]*K, len(keys))
+	for i, key := range keys {
+		k := key
+		m[i] = &k
 	}
 	return m
 }
 
-// SortValues returns a new MapKeyValue after sorting the values using given function sortFn.
-func (r *MapKeyValue[K, T]) SortValues(sortFn func(value1, value2 T) bool) *MapKeyValue[K, T] {
+// SortValues returns a []*T (values) after sorting the values using given function sortFn.
+func (r *MapKeyValue[K, T]) SortValues(sortFn func(value1, value2 T) bool) []*T {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	var kvs []kv[K, T]
+	kvs := make([]*kv[K, T], 0, r.Size())
 	for key, value := range r.data {
-		kvs = append(kvs, kv[K, T]{key, value})
+		kvs = append(kvs, &kv[K, T]{key, value})
 	}
 
 	sort.Slice(kvs, func(i, j int) bool {
 		return sortFn(kvs[i].value, kvs[j].value)
 	})
 
-	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
-	for _, pair := range kvs {
-		m.Set(pair.key, pair.value)
+	m := make([]*T, len(kvs))
+	for i, pair := range kvs {
+		m[i] = &pair.value
 	}
 
 	return m

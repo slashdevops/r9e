@@ -1648,24 +1648,16 @@ func TestSortKeys(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
 		}
 
-		kvSorted := kv.SortKeys(func(key1 string, key2 string) bool {
+		kSorted := kv.SortKeys(func(key1 string, key2 string) bool {
 			return key1 < key2
 		})
 
-		if kvSorted.Size() != 3 {
-			t.Errorf("Expected size to be %v, got %v", 3, kvSorted.Size())
+		if len(kSorted) != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, len(kSorted))
 		}
 
-		keys := kvSorted.Keys()
-
-		if keys[0] != "Archimedes" {
-			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Archimedes", keys[0])
-		}
-		if keys[1] != "Euler" {
-			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Euler", keys[1])
-		}
-		if keys[2] != "Golden Ratio" {
-			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Golden Ratio", keys[2])
+		if *kSorted[0] != "Archimedes" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Archimedes", *kSorted[0])
 		}
 	})
 
@@ -1676,15 +1668,15 @@ func TestSortKeys(t *testing.T) {
 		}
 		kv := NewMapKeyValue[string, testStruct]()
 
-		kvSorted := kv.SortKeys(func(key1 string, key2 string) bool {
+		kSorted := kv.SortKeys(func(key1 string, key2 string) bool {
 			return key1 < key2
 		})
 
 		if kv.Size() != 0 {
 			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
 		}
-		if kvSorted.Size() != 0 {
-			t.Errorf("Expected size to be %v, got %v", 0, kvSorted.Size())
+		if len(kSorted) != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, len(kSorted))
 		}
 	})
 }
@@ -1705,24 +1697,22 @@ func TestSortValues(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
 		}
 
-		kvSorted := kv.SortValues(func(value1 testStruct, value2 testStruct) bool {
+		vSorted := kv.SortValues(func(value1 testStruct, value2 testStruct) bool {
 			return value1.value < value2.value
 		})
 
-		if kvSorted.Size() != 3 {
-			t.Errorf("Expected size to be %v, got %v", 3, kvSorted.Size())
+		if len(vSorted) != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, len(vSorted))
 		}
 
-		keys := kvSorted.Keys()
-
-		if keys[0] != "Golden Ratio" {
-			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Golden Ratio", keys[0])
+		if vSorted[0].Name != "This is The Golden Ratio" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "This is The Golden Ratio", vSorted[0].Name)
 		}
-		if keys[1] != "Euler" {
-			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Euler", keys[1])
+		if vSorted[1].Name != "This is Euler's Number (e)" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "This is Euler's Number (e)", vSorted[1].Name)
 		}
-		if keys[2] != "Archimedes" {
-			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Archimedes", keys[2])
+		if vSorted[2].Name != "This is Archimedes' Constant (Pi)" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "This is Archimedes' Constant (Pi)", vSorted[2].Name)
 		}
 	})
 
@@ -1733,15 +1723,15 @@ func TestSortValues(t *testing.T) {
 		}
 		kv := NewMapKeyValue[string, testStruct]()
 
-		kvSorted := kv.SortValues(func(value1 testStruct, value2 testStruct) bool {
+		vSorted := kv.SortValues(func(value1 testStruct, value2 testStruct) bool {
 			return value1.value < value2.value
 		})
 
 		if kv.Size() != 0 {
 			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
 		}
-		if kvSorted.Size() != 0 {
-			t.Errorf("Expected size to be %v, got %v", 0, kvSorted.Size())
+		if len(vSorted) != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, len(vSorted))
 		}
 	})
 }
