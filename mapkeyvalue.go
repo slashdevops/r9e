@@ -28,6 +28,12 @@ type MapKeyValue[K comparable, T any] struct {
 	data map[K]T
 }
 
+// kv is a helper struct to sort the values of the map.
+type kv[K comparable, T any] struct {
+	key   K
+	value T
+}
+
 // NewMapKeyValue returns a new MapKeyValue container.
 func NewMapKeyValue[K comparable, T any](options ...MapKeyValueOptions) *MapKeyValue[K, T] {
 	// parse options
@@ -367,20 +373,42 @@ func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others
 	return
 }
 
-// SortKeys returns a new MapKeyValue after sorting the keys.
-func (r *MapKeyValue[K, T]) SortKeys(less func(key1, key2 K) bool) *MapKeyValue[K, T] {
+// SortKeys returns a new MapKeyValue after sorting the keys using the given sortFn function.
+func (r *MapKeyValue[K, T]) SortKeys(sortFn func(key1, key2 K) bool) *MapKeyValue[K, T] {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	keys := r.Keys()
 
 	sort.Slice(keys, func(i, j int) bool {
-		return less(keys[i], keys[j])
+		return sortFn(keys[i], keys[j])
 	})
 
 	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for _, key := range keys {
 		m.Set(key, r.data[key])
 	}
+	return m
+}
+
+// SortValues returns a new MapKeyValue after sorting the values using given function sortFn.
+func (r *MapKeyValue[K, T]) SortValues(sortFn func(value1, value2 T) bool) *MapKeyValue[K, T] {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var kvs []kv[K, T]
+	for key, value := range r.data {
+		kvs = append(kvs, kv[K, T]{key, value})
+	}
+
+	sort.Slice(kvs, func(i, j int) bool {
+		return sortFn(kvs[i].value, kvs[j].value)
+	})
+
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
+	for _, pair := range kvs {
+		m.Set(pair.key, pair.value)
+	}
+
 	return m
 }

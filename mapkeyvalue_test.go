@@ -987,6 +987,68 @@ func TestDeepEqual(t *testing.T) {
 		}
 	})
 
+	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys and it is not equal same size", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv1 := NewMapKeyValue[string, testStruct]()
+		kv2 := NewMapKeyValue[string, testStruct]()
+
+		kv1.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv1.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv1.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		kv2.Set("key 1", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv2.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv2.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv1.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv1.Size())
+		}
+		if kv2.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv2.Size())
+		}
+
+		if kv1.DeepEqual(kv2) == true {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+
+		if kv2.DeepEqual(kv1) == true {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+	})
+
+	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys and it is not equal different size", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv1 := NewMapKeyValue[string, testStruct]()
+		kv2 := NewMapKeyValue[string, testStruct]()
+
+		kv1.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv1.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv1.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		kv2.Set("key 1", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+
+		if kv1.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv1.Size())
+		}
+		if kv2.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv2.Size())
+		}
+
+		if kv1.DeepEqual(kv2) == true {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+
+		if kv2.DeepEqual(kv1) == true {
+			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+		}
+	})
+
 	t.Run("test DeepEqual for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1305,6 +1367,10 @@ func TestFilterValue(t *testing.T) {
 			return value.value > 3
 		})
 
+		if newKv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, newKv.Size())
+		}
+
 		newKv.Each(func(key string, value testStruct) {
 			if key != "Archimedes" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
@@ -1334,6 +1400,348 @@ func TestFilterValue(t *testing.T) {
 		}
 		if newKv.Size() != 0 {
 			t.Errorf("Expected size to be %v, got %v", 0, newKv.Size())
+		}
+	})
+}
+
+func TestPartition(t *testing.T) {
+	t.Run("test Partition for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		grp1Kv, grp2Kv := kv.Partition(func(key string, value testStruct) bool {
+			return value.value > 3
+		})
+
+		if grp1Kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, grp1Kv.Size())
+		}
+		if grp2Kv.Size() != 2 {
+			t.Errorf("Expected size to be %v, got %v", 2, grp1Kv.Size())
+		}
+
+		grp1Kv.Each(func(key string, value testStruct) {
+			if key != "Archimedes" {
+				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
+			}
+			if value.Name != "This is Archimedes' Constant (Pi)" {
+				t.Errorf("Expected value.Name to be uppercase, want: %v, got %v", "This is Archimedes' Constant (Pi)", value.Name)
+			}
+			if value.value != 3.1415 {
+				t.Errorf("Expected value.value to be doubled, want: %v, got %v", kv.Get(key).value, value.value)
+			}
+		})
+
+		grp2Kv.Each(func(key string, value testStruct) {
+			if key != "Euler" && key != "Golden Ratio" {
+				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
+			}
+			if value.Name != "This is Euler's Number (e)" && value.Name != "This is The Golden Ratio" {
+				t.Errorf("Expected value.Name to be uppercase, want: %v, got %v", "This is Euler's Number (e)", value.Name)
+			}
+			if value.value != 2.7182 && value.value != 1.6180 {
+				t.Errorf("Expected value.value to be doubled, want: %v, got %v", kv.Get(key).value, value.value)
+			}
+		})
+	})
+
+	t.Run("test Partition for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		grp1Kv, grp2Kv := kv.Partition(func(key string, value testStruct) bool {
+			return value.value > 3
+		})
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+		if grp1Kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, grp1Kv.Size())
+		}
+
+		if grp2Kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, grp2Kv.Size())
+		}
+	})
+}
+
+func TestPartitionKey(t *testing.T) {
+	t.Run("test PartitionKey for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		grp1Kv, grp2Kv := kv.PartitionKey(func(key string) bool {
+			return key == "Archimedes"
+		})
+
+		if grp1Kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, grp1Kv.Size())
+		}
+		if grp2Kv.Size() != 2 {
+			t.Errorf("Expected size to be %v, got %v", 2, grp1Kv.Size())
+		}
+
+		grp1Kv.Each(func(key string, value testStruct) {
+			if key != "Archimedes" {
+				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
+			}
+			if value.Name != "This is Archimedes' Constant (Pi)" {
+				t.Errorf("Expected value.Name to be uppercase, want: %v, got %v", "This is Archimedes' Constant (Pi)", value.Name)
+			}
+			if value.value != 3.1415 {
+				t.Errorf("Expected value.value to be doubled, want: %v, got %v", kv.Get(key).value, value.value)
+			}
+		})
+
+		grp2Kv.Each(func(key string, value testStruct) {
+			if key != "Euler" && key != "Golden Ratio" {
+				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
+			}
+			if value.Name != "This is Euler's Number (e)" && value.Name != "This is The Golden Ratio" {
+				t.Errorf("Expected value.Name to be uppercase, want: %v, got %v", "This is Euler's Number (e)", value.Name)
+			}
+			if value.value != 2.7182 && value.value != 1.6180 {
+				t.Errorf("Expected value.value to be doubled, want: %v, got %v", kv.Get(key).value, value.value)
+			}
+		})
+	})
+
+	t.Run("test PartitionKey for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		grp1Kv, grp2Kv := kv.PartitionKey(func(key string) bool {
+			return key == "Archimedes"
+		})
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+		if grp1Kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, grp1Kv.Size())
+		}
+
+		if grp2Kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, grp2Kv.Size())
+		}
+	})
+}
+
+func TestPartitionValue(t *testing.T) {
+	t.Run("test PartitionValue for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		grp1Kv, grp2Kv := kv.PartitionValue(func(value testStruct) bool {
+			return value.value > 3
+		})
+
+		if grp1Kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, grp1Kv.Size())
+		}
+		if grp2Kv.Size() != 2 {
+			t.Errorf("Expected size to be %v, got %v", 2, grp1Kv.Size())
+		}
+
+		grp1Kv.Each(func(key string, value testStruct) {
+			if key != "Archimedes" {
+				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
+			}
+			if value.Name != "This is Archimedes' Constant (Pi)" {
+				t.Errorf("Expected value.Name to be uppercase, want: %v, got %v", "This is Archimedes' Constant (Pi)", value.Name)
+			}
+			if value.value != 3.1415 {
+				t.Errorf("Expected value.value to be doubled, want: %v, got %v", kv.Get(key).value, value.value)
+			}
+		})
+
+		grp2Kv.Each(func(key string, value testStruct) {
+			if key != "Euler" && key != "Golden Ratio" {
+				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
+			}
+			if value.Name != "This is Euler's Number (e)" && value.Name != "This is The Golden Ratio" {
+				t.Errorf("Expected value.Name to be uppercase, want: %v, got %v", "This is Euler's Number (e)", value.Name)
+			}
+			if value.value != 2.7182 && value.value != 1.6180 {
+				t.Errorf("Expected value.value to be doubled, want: %v, got %v", kv.Get(key).value, value.value)
+			}
+		})
+	})
+
+	t.Run("test PartitionValue for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		grp1Kv, grp2Kv := kv.PartitionValue(func(value testStruct) bool {
+			return value.value > 3
+		})
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+		if grp1Kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, grp1Kv.Size())
+		}
+
+		if grp2Kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, grp2Kv.Size())
+		}
+	})
+}
+
+func TestSortKeys(t *testing.T) {
+	t.Run("test SortKeys for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		kvSorted := kv.SortKeys(func(key1 string, key2 string) bool {
+			return key1 < key2
+		})
+
+		if kvSorted.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kvSorted.Size())
+		}
+
+		keys := kvSorted.Keys()
+
+		if keys[0] != "Archimedes" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Archimedes", keys[0])
+		}
+		if keys[1] != "Euler" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Euler", keys[1])
+		}
+		if keys[2] != "Golden Ratio" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Golden Ratio", keys[2])
+		}
+	})
+
+	t.Run("test SortKeys for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kvSorted := kv.SortKeys(func(key1 string, key2 string) bool {
+			return key1 < key2
+		})
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+		if kvSorted.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kvSorted.Size())
+		}
+	})
+}
+
+func TestSortValues(t *testing.T) {
+	t.Run("test SortValues for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		kvSorted := kv.SortValues(func(value1 testStruct, value2 testStruct) bool {
+			return value1.value < value2.value
+		})
+
+		if kvSorted.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kvSorted.Size())
+		}
+
+		keys := kvSorted.Keys()
+
+		if keys[0] != "Golden Ratio" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Golden Ratio", keys[0])
+		}
+		if keys[1] != "Euler" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Euler", keys[1])
+		}
+		if keys[2] != "Archimedes" {
+			t.Errorf("Expected key to be uppercase, want: %v, got %v", "Archimedes", keys[2])
+		}
+	})
+
+	t.Run("test SortValues for NewMapKeyValue[string, struct] without keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kvSorted := kv.SortValues(func(value1 testStruct, value2 testStruct) bool {
+			return value1.value < value2.value
+		})
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kv.Size())
+		}
+		if kvSorted.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", 0, kvSorted.Size())
 		}
 	})
 }
