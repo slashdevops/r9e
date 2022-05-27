@@ -458,6 +458,62 @@ func TestSize(t *testing.T) {
 	})
 }
 
+func TestIsEmpty(t *testing.T) {
+	t.Run("test IsEmpty for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		if kv.IsEmpty() != false {
+			t.Errorf("Expected IsEmpty to be %v, got %v", false, kv.IsEmpty())
+		}
+
+		kv.Clear()
+
+		if kv.IsEmpty() != true {
+			t.Errorf("Expected IsEmpty to be %v, got %v", true, kv.IsEmpty())
+		}
+	})
+}
+
+func TestIsFull(t *testing.T) {
+	t.Run("test IsFull for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[string, testStruct]()
+
+		kv.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+		kv.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
+		kv.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
+
+		if kv.Size() != 3 {
+			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
+		}
+
+		if kv.IsFull() != true {
+			t.Errorf("Expected IsFull to be %v, got %v", false, kv.IsFull())
+		}
+
+		kv.Clear()
+
+		if kv.IsFull() != false {
+			t.Errorf("Expected IsFull to be %v, got %v", true, kv.IsFull())
+		}
+	})
+}
+
 // **************************************************
 // ******************** Examples ********************
 

@@ -100,21 +100,6 @@ func (r *MapKeyValue[K, T]) IsFull() bool {
 	return r.Size() != 0
 }
 
-// DeepEqual returns true if the value is deep equal to the MapKeyValue
-func (r *MapKeyValue[K, T]) DeepEqual(kv *MapKeyValue[K, T]) bool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	if r.Size() != kv.Size() {
-		return false
-	}
-
-	if reflect.DeepEqual(r, kv) {
-		return true
-	}
-	return false
-}
-
 // ContainsKey returns true if the key is in the container.
 func (r *MapKeyValue[K, T]) ContainsKey(key K) bool {
 	r.mu.RLock()
@@ -215,6 +200,21 @@ func (r *MapKeyValue[K, T]) CloneAndClear() *MapKeyValue[K, T] {
 	}
 	r.Clear()
 	return clone
+}
+
+// DeepEqual returns true if the kv is deep equal to the MapKeyValue container
+func (r *MapKeyValue[K, T]) DeepEqual(kv *MapKeyValue[K, T]) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	if r.Size() != kv.Size() {
+		return false
+	}
+
+	if reflect.DeepEqual(r, kv) {
+		return true
+	}
+	return false
 }
 
 // Map returns a new MapKeyValue after applying the given function fn to each key-value pair.
