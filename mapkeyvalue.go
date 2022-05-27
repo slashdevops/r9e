@@ -1,6 +1,7 @@
 package r9e
 
 import (
+	"reflect"
 	"sort"
 	"sync"
 )
@@ -12,8 +13,8 @@ type mapKeyValueOptions struct {
 // MapKeyValueOptions are the options for MapKeyValue.
 type MapKeyValueOptions func(*mapKeyValueOptions)
 
-// WithSize sets the size of the MapKeyValue.
-func WithSize(size int) MapKeyValueOptions {
+// WithCapacity sets the initial capacity allocation of the MapKeyValue.
+func WithCapacity(size int) MapKeyValueOptions {
 	return func(kv *mapKeyValueOptions) {
 		kv.size = size
 	}
@@ -81,12 +82,43 @@ func (r *MapKeyValue[K, T]) Clear() {
 	r.data = make(map[K]T)
 }
 
-// Len returns the number of key-value pairs stored in the container.
-func (r *MapKeyValue[K, T]) Len() int {
+// Size returns the number of key-value pairs stored in the container.
+func (r *MapKeyValue[K, T]) Size() int {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	return len(r.data)
+}
+
+func (r *MapKeyValue[K, T]) IsEmpty() bool {
+	return r.Size() == 0
+}
+
+func (r *MapKeyValue[K, T]) IsFull() bool {
+	return r.Size() != 0
+}
+
+// ContainsKey returns true if the key is in the container.
+func (r *MapKeyValue[K, T]) ContainsKey(key K) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	_, ok := r.data[key]
+	return ok
+}
+
+// ContainsValue returns true if the value is in the container.
+func (r *MapKeyValue[K, T]) ContainsValue(value T) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	for _, v := range r.data {
+		if reflect.DeepEqual(v, value) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Keys returns all keys stored in the container.
@@ -148,7 +180,7 @@ func (r *MapKeyValue[K, T]) Clone() *MapKeyValue[K, T] {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	clone := NewMapKeyValue[K, T](WithSize(r.Len()))
+	clone := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		clone.Set(key, value)
 	}
@@ -160,7 +192,7 @@ func (r *MapKeyValue[K, T]) CloneAndClear() *MapKeyValue[K, T] {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	clone := NewMapKeyValue[K, T](WithSize(r.Len()))
+	clone := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		clone.Set(key, value)
 	}
@@ -173,7 +205,7 @@ func (r *MapKeyValue[K, T]) Map(fn func(key K, value T) (newKey K, newValue T)) 
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		newKey, newValue := fn(key, value)
 		m.Set(newKey, newValue)
@@ -186,7 +218,7 @@ func (r *MapKeyValue[K, T]) MapKey(fn func(key K) K) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key := range r.data {
 		newKey := fn(key)
 		m.Set(newKey, r.data[key])
@@ -199,7 +231,7 @@ func (r *MapKeyValue[K, T]) MapValue(fn func(value T) T) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		newValue := fn(value)
 		m.Set(key, newValue)
@@ -212,7 +244,7 @@ func (r *MapKeyValue[K, T]) Filter(fn func(key K, value T) bool) *MapKeyValue[K,
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		if fn(key, value) {
 			m.Set(key, value)
@@ -226,7 +258,7 @@ func (r *MapKeyValue[K, T]) FilterKey(fn func(key K) bool) *MapKeyValue[K, T] {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key := range r.data {
 		if fn(key) {
 			m.Set(key, r.data[key])
@@ -240,7 +272,7 @@ func (r *MapKeyValue[K, T]) FilterValue(fn func(value T) bool) *MapKeyValue[K, T
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		if fn(value) {
 			m.Set(key, value)
@@ -255,8 +287,8 @@ func (r *MapKeyValue[K, T]) Partition(fn func(key K, value T) bool) (match, othe
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	match = NewMapKeyValue[K, T](WithSize(r.Len()))
-	others = NewMapKeyValue[K, T](WithSize(r.Len()))
+	match = NewMapKeyValue[K, T](WithCapacity(r.Size()))
+	others = NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		if fn(key, value) {
 			match.Set(key, value)
@@ -273,8 +305,8 @@ func (r *MapKeyValue[K, T]) PartitionKey(fn func(key K) bool) (match, others *Ma
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	match = NewMapKeyValue[K, T](WithSize(r.Len()))
-	others = NewMapKeyValue[K, T](WithSize(r.Len()))
+	match = NewMapKeyValue[K, T](WithCapacity(r.Size()))
+	others = NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key := range r.data {
 		if fn(key) {
 			match.Set(key, r.data[key])
@@ -291,8 +323,8 @@ func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	match = NewMapKeyValue[K, T](WithSize(r.Len()))
-	others = NewMapKeyValue[K, T](WithSize(r.Len()))
+	match = NewMapKeyValue[K, T](WithCapacity(r.Size()))
+	others = NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
 		if fn(value) {
 			match.Set(key, value)
@@ -313,7 +345,7 @@ func (r *MapKeyValue[K, T]) SortKeys(less func(key1, key2 K) bool) *MapKeyValue[
 		return less(keys[i], keys[j])
 	})
 
-	m := NewMapKeyValue[K, T](WithSize(r.Len()))
+	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for _, key := range keys {
 		m.Set(key, r.data[key])
 	}

@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strconv"
 	"testing"
 	"time"
@@ -19,9 +20,9 @@ type TestStruct struct {
 }
 
 var (
-	kv_int_int       = NewMapKeyValue[int, int](WithSize(kvSize))
-	kv_string_string = NewMapKeyValue[string, string](WithSize(kvSize))
-	kv_string_struct = NewMapKeyValue[string, TestStruct](WithSize(kvSize))
+	kv_int_int       = NewMapKeyValue[int, int](WithCapacity(kvSize))
+	kv_string_string = NewMapKeyValue[string, string](WithCapacity(kvSize))
+	kv_string_struct = NewMapKeyValue[string, TestStruct](WithCapacity(kvSize))
 )
 
 func init() {
@@ -52,6 +53,128 @@ func init() {
 }
 
 // ******************** Test ********************
+func TestNewMapKeyValue(t *testing.T) {
+	t.Run("test NewMapKeyValue[int, int] with capacity", func(t *testing.T) {
+		kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", kvSize, kv.Size())
+		}
+
+		kv.Set(1, 8096)
+
+		if kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		value := kv.Get(1)
+		VKind := reflect.TypeOf(value).Kind().String()
+
+		if VKind != "int" {
+			t.Errorf("Expected type to be %s, got %s", "int", VKind)
+		}
+
+		key := kv.Keys()[0]
+		kKind := reflect.TypeOf(key).Kind().String()
+
+		if kKind != "int" {
+			t.Errorf("Expected type to be %s, got %s", "int", kKind)
+		}
+	})
+
+	t.Run("test NewMapKeyValue[int, int] without capacity", func(t *testing.T) {
+		kv := NewMapKeyValue[int, int]()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", kvSize, kv.Size())
+		}
+
+		kv.Set(1, 8096)
+
+		if kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		value := kv.Get(1)
+		VKind := reflect.TypeOf(value).Kind().String()
+
+		if VKind != "int" {
+			t.Errorf("Expected type to be %s, got %s", "int", VKind)
+		}
+
+		key := kv.Keys()[0]
+		kKind := reflect.TypeOf(key).Kind().String()
+
+		if kKind != "int" {
+			t.Errorf("Expected type to be %s, got %s", "int", kKind)
+		}
+	})
+
+	t.Run("test NewMapKeyValue[float64, string] without capacity", func(t *testing.T) {
+		kv := NewMapKeyValue[float64, string]()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", kvSize, kv.Size())
+		}
+
+		kv.Set(1, "test string")
+
+		if kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		value := kv.Get(1)
+		VKind := reflect.TypeOf(value).Kind().String()
+
+		if VKind != "string" {
+			t.Errorf("Expected type to be %s, got %s", "string", VKind)
+		}
+
+		key := kv.Keys()[0]
+		kKind := reflect.TypeOf(key).Kind().String()
+
+		if kKind != "float64" {
+			t.Errorf("Expected type to be %s, got %s", "float64", kKind)
+		}
+	})
+
+	t.Run("test NewMapKeyValue[int, custom struct] without capacity", func(t *testing.T) {
+		type testStruct struct {
+			Name  string
+			value float64
+		}
+		kv := NewMapKeyValue[int, testStruct]()
+
+		if kv.Size() != 0 {
+			t.Errorf("Expected size to be %v, got %v", kvSize, kv.Size())
+		}
+
+		kv.Set(1, testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
+
+		if kv.Size() != 1 {
+			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
+		}
+
+		value := kv.Get(1)
+		typeOf := reflect.TypeOf(value)
+		kind := typeOf.Kind().String()
+
+		if kind != "struct" {
+			t.Errorf("Expected type to be %s, got %s", "struct", kind)
+		}
+
+		if typeOf.Name() != "testStruct" {
+			t.Errorf("Expected type to be %s, got %s", "testStruct", kind)
+		}
+
+		key := kv.Keys()[0]
+		kKind := reflect.TypeOf(key).Kind().String()
+
+		if kKind != "int" {
+			t.Errorf("Expected type to be %s, got %s", "int", kKind)
+		}
+	})
+}
 
 // ******************** Examples ********************
 
@@ -112,7 +235,7 @@ func Example() {
 	// show keys
 	keys := grades.Values()
 	for _, key := range keys {
-		fmt.Printf("studens: %v\n", key)
+		fmt.Printf("student: %v\n", key)
 	}
 
 	filterValues := grades.Filter(func(key string, value float64) bool {
@@ -126,7 +249,7 @@ func Example() {
 
 // ******************** Benchmarks ********************
 func BenchmarkMapKeyValue_Set_int_int(b *testing.B) {
-	kv := NewMapKeyValue[int, int](WithSize(kvSize))
+	kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
 
 	for i := 0; i < b.N; i++ {
 		kv.Set(rand.Intn(kvSize), rand.Intn(kvSize))
@@ -140,7 +263,7 @@ func BenchmarkMapKeyValue_Get_int_int(b *testing.B) {
 }
 
 func BenchmarkMapKeyValue_Set_Get_int_int(b *testing.B) {
-	kv := NewMapKeyValue[int, int](WithSize(kvSize))
+	kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
 
 	for i := 0; i < b.N; i++ {
 		kv.Set(rand.Intn(kvSize), rand.Intn(kvSize))
@@ -152,7 +275,7 @@ func BenchmarkMapKeyValue_Set_Get_int_int(b *testing.B) {
 }
 
 func BenchmarkMapKeyValue_Set_string_string(b *testing.B) {
-	kv := NewMapKeyValue[string, string](WithSize(kvSize))
+	kv := NewMapKeyValue[string, string](WithCapacity(kvSize))
 
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
@@ -168,7 +291,7 @@ func BenchmarkMapKeyValue_Get_string_string(b *testing.B) {
 }
 
 func BenchmarkMapKeyValue_Set_Get_string_string(b *testing.B) {
-	kv := NewMapKeyValue[string, string](WithSize(kvSize))
+	kv := NewMapKeyValue[string, string](WithCapacity(kvSize))
 
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
@@ -182,7 +305,7 @@ func BenchmarkMapKeyValue_Set_Get_string_string(b *testing.B) {
 }
 
 func BenchmarkMapKeyValue_Set_string_struct(b *testing.B) {
-	kv := NewMapKeyValue[string, TestStruct](WithSize(kvSize))
+	kv := NewMapKeyValue[string, TestStruct](WithCapacity(kvSize))
 
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
@@ -204,7 +327,7 @@ func BenchmarkMapKeyValue_Get_string_struct(b *testing.B) {
 }
 
 func BenchmarkMapKeyValue_Set_Get_string_struct(b *testing.B) {
-	kv := NewMapKeyValue[string, TestStruct](WithSize(kvSize))
+	kv := NewMapKeyValue[string, TestStruct](WithCapacity(kvSize))
 
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
