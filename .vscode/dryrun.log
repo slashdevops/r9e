@@ -1,0 +1,10 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory `/Users/christian/git/github.com/slashdevops/r9e'
+rm -rf ./*.out
+go mod tidy
+go fmt github.com/slashdevops/r9e
+go vet github.com/slashdevops/r9e
+go test -race -covermode=atomic -coverprofile coverage.out -tags=unit github.com/slashdevops/r9e
+ 
+make: Leaving directory `/Users/christian/git/github.com/slashdevops/r9e'
+ 

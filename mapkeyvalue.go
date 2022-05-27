@@ -123,6 +123,18 @@ func (r *MapKeyValue[K, T]) ContainsValue(value T) bool {
 	return false
 }
 
+// Get returns the value associated with the key.
+func (r *MapKeyValue[K, T]) Key(key K) K {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	if _, ok := r.data[key]; ok {
+		return key
+	}
+	var empty K
+	return empty
+}
+
 // Keys returns all keys stored in the container.
 func (r *MapKeyValue[K, T]) Keys() []K {
 	r.mu.RLock()
@@ -222,8 +234,8 @@ func (r *MapKeyValue[K, T]) DeepEqual(kv *MapKeyValue[K, T]) bool {
 
 // Map returns a new MapKeyValue after applying the given function fn to each key-value pair.
 func (r *MapKeyValue[K, T]) Map(fn func(key K, value T) (newKey K, newValue T)) *MapKeyValue[K, T] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
@@ -235,8 +247,8 @@ func (r *MapKeyValue[K, T]) Map(fn func(key K, value T) (newKey K, newValue T)) 
 
 // MapKey returns a new MapKeyValue after applying the given function fn to each key.
 func (r *MapKeyValue[K, T]) MapKey(fn func(key K) K) *MapKeyValue[K, T] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key := range r.data {
@@ -248,8 +260,8 @@ func (r *MapKeyValue[K, T]) MapKey(fn func(key K) K) *MapKeyValue[K, T] {
 
 // MapValue returns a new MapKeyValue after applying the given function fn to each value.
 func (r *MapKeyValue[K, T]) MapValue(fn func(value T) T) *MapKeyValue[K, T] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
@@ -261,8 +273,8 @@ func (r *MapKeyValue[K, T]) MapValue(fn func(value T) T) *MapKeyValue[K, T] {
 
 // Filter returns a new MapKeyValue after applying the given function fn to each key-value pair.
 func (r *MapKeyValue[K, T]) Filter(fn func(key K, value T) bool) *MapKeyValue[K, T] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
@@ -275,8 +287,8 @@ func (r *MapKeyValue[K, T]) Filter(fn func(key K, value T) bool) *MapKeyValue[K,
 
 // FilterKey returns a new MapKeyValue after applying the given function fn to each key.
 func (r *MapKeyValue[K, T]) FilterKey(fn func(key K) bool) *MapKeyValue[K, T] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key := range r.data {
@@ -289,8 +301,8 @@ func (r *MapKeyValue[K, T]) FilterKey(fn func(key K) bool) *MapKeyValue[K, T] {
 
 // FilterValue returns a new MapKeyValue after applying the given function fn to each value.
 func (r *MapKeyValue[K, T]) FilterValue(fn func(value T) bool) *MapKeyValue[K, T] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	m := NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	for key, value := range r.data {
@@ -304,8 +316,8 @@ func (r *MapKeyValue[K, T]) FilterValue(fn func(value T) bool) *MapKeyValue[K, T
 // Partition returns two new MapKeyValue. One with all the elements that satisfy the predicate and
 // another with the rest. The predicate is applied to each element.
 func (r *MapKeyValue[K, T]) Partition(fn func(key K, value T) bool) (match, others *MapKeyValue[K, T]) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	match = NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	others = NewMapKeyValue[K, T](WithCapacity(r.Size()))
@@ -322,8 +334,8 @@ func (r *MapKeyValue[K, T]) Partition(fn func(key K, value T) bool) (match, othe
 // PartitionKey returns two new MapKeyValue. One with all the elements that satisfy the predicate and
 // another with the rest. The predicate is applied to each key.
 func (r *MapKeyValue[K, T]) PartitionKey(fn func(key K) bool) (match, others *MapKeyValue[K, T]) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	match = NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	others = NewMapKeyValue[K, T](WithCapacity(r.Size()))
@@ -340,8 +352,8 @@ func (r *MapKeyValue[K, T]) PartitionKey(fn func(key K) bool) (match, others *Ma
 // PartitionValue returns two new MapKeyValue. One with all the elements that satisfy the predicate and
 // another with the rest. The predicate is applied to each value.
 func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others *MapKeyValue[K, T]) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	match = NewMapKeyValue[K, T](WithCapacity(r.Size()))
 	others = NewMapKeyValue[K, T](WithCapacity(r.Size()))
@@ -357,8 +369,8 @@ func (r *MapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others
 
 // SortKeys returns a new MapKeyValue after sorting the keys.
 func (r *MapKeyValue[K, T]) SortKeys(less func(key1, key2 K) bool) *MapKeyValue[K, T] {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 
 	keys := r.Keys()
 

@@ -1,0 +1,1 @@
+{"buildTargets":[".DELETE_ON_ERROR","all","clean","fmt","generate","lint","mod-update","test","test-coverage","tidy","vet"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}
