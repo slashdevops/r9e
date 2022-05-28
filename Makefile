@@ -36,5 +36,8 @@ test: tidy fmt vet
 test-coverage: test
 	go tool cover -html=coverage.out
 
+bench:
+	go test -bench .
+
 clean:
 	rm -rf ./*.out
