@@ -10,10 +10,10 @@ type mapKeyValueOptions struct {
 	size int
 }
 
-// MapKeyValueOptions are the options for MapKeyValue.
+// MapKeyValueOptions are the options for MapKeyValue container.
 type MapKeyValueOptions func(*mapKeyValueOptions)
 
-// WithCapacity sets the initial capacity allocation of the MapKeyValue.
+// WithCapacity sets the initial capacity allocation of the MapKeyValue container.
 func WithCapacity(size int) MapKeyValueOptions {
 	return func(kv *mapKeyValueOptions) {
 		kv.size = size
@@ -28,7 +28,7 @@ type MapKeyValue[K comparable, T any] struct {
 	data map[K]T
 }
 
-// kv is a helper struct to sort the values of the map.
+// kv is a helper struct to sort the values of the MapKeyValue container.
 type kv[K comparable, T any] struct {
 	key   K
 	value T
@@ -36,7 +36,6 @@ type kv[K comparable, T any] struct {
 
 // NewMapKeyValue returns a new MapKeyValue container.
 func NewMapKeyValue[K comparable, T any](options ...MapKeyValueOptions) *MapKeyValue[K, T] {
-	// parse options
 	kvo := mapKeyValueOptions{}
 	for _, opt := range options {
 		opt(&kvo)
@@ -55,7 +54,8 @@ func (r *MapKeyValue[K, T]) Set(key K, value T) {
 	r.data[key] = value
 }
 
-// GetCheck returns the value associated with the key if this exist also a if this exist.
+// GetCheck returns the value associated with the key if this exist also a
+// boolean value if this exist of not.
 func (r *MapKeyValue[K, T]) GetCheck(key K) (T, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -80,7 +80,7 @@ func (r *MapKeyValue[K, T]) Delete(key K) {
 	delete(r.data, key)
 }
 
-// Clear deletes all key-value pairs in the container.
+// Clear deletes all key-value pairs stored in the container.
 func (r *MapKeyValue[K, T]) Clear() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -129,7 +129,7 @@ func (r *MapKeyValue[K, T]) ContainsValue(value T) bool {
 	return false
 }
 
-// Get returns the value associated with the key.
+// Get returns the key value associated with the key.
 func (r *MapKeyValue[K, T]) Key(key K) K {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -220,7 +220,7 @@ func (r *MapKeyValue[K, T]) CloneAndClear() *MapKeyValue[K, T] {
 	return clone
 }
 
-// DeepEqual returns true if the kv is deep equal to the MapKeyValue container
+// DeepEqual returns true if the given kv is deep equal to the MapKeyValue container
 func (r *MapKeyValue[K, T]) DeepEqual(kv *MapKeyValue[K, T]) bool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

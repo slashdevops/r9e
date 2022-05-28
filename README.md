@@ -66,7 +66,7 @@ func main() {
   }
 
   // With Capacity allocated
-  //kv := r9e.NewMapKeyValue[string, MathematicalConstants](r9e.WithCapacity(5))
+  // kv := r9e.NewMapKeyValue[string, MathematicalConstants](r9e.WithCapacity(5))
   kv := r9e.NewMapKeyValue[string, MathematicalConstants]()
 
   kv.Set("pi", MathematicalConstants{"Archimedes' constant", 3.141592})
@@ -87,6 +87,32 @@ func main() {
   fmt.Printf("\n")
   fmt.Printf("The most famous mathematical constant:\n")
   fmt.Printf("Name: %v, Value: %v\n", kv.Get("pi").Name, kv.Get("pi").Value)
+
+  lst := kv.SortValues(func(value1, value2 MathematicalConstants) bool {
+    return value1.Value > value2.Value
+  })
+
+  fmt.Printf("\n")
+  fmt.Printf("The most famous mathematical constant sorted by value:\n")
+  for i, value := range lst {
+    fmt.Printf("i: %v, Name: %v, Value: %v\n", i, value.Name, value.Value)
+  }
+
+  kvHigh, kvLow := kv.Partition(func(key string, value MathematicalConstants) bool {
+    return value.Value > 2.5
+  })
+
+  fmt.Printf("\n")
+  fmt.Printf("Mathematical constants which value is greater than 2.5:\n")
+  kvHigh.Each(func(key string, value MathematicalConstants) {
+    fmt.Printf("Key: %v, Name: %v, Value: %v\n", key, value.Name, value.Value)
+  })
+
+  fmt.Printf("\n")
+  fmt.Printf("Mathematical constants which value is less than 2.5:\n")
+  kvLow.Each(func(key string, value MathematicalConstants) {
+    fmt.Printf("Key: %v, Name: %v, Value: %v\n", key, value.Name, value.Value)
+  })
 }
 ```
 
@@ -100,6 +126,22 @@ Key: pi, Name: Archimedes' constant, Value: 3.141592
 
 The most famous mathematical constant:
 Name: Archimedes' constant, Value: 3.141592
+
+The most famous mathematical constants sorted by value:
+i: 0, Name: Archimedes' constant, Value: 3.141592
+i: 1, Name: Euler number, Napier's constant, Value: 2.718281
+i: 2, Name: Plastic number ρ (or silver constant), Value: 2.414213
+i: 3, Name: Golden ratio constant, Value: 1.618033
+i: 4, Name: Euler number, Napier's constant, Value: 0.577215
+
+Mathematical constants which value is greater than 2.5:
+Key: pi, Name: Archimedes' constant, Value: 3.141592
+Key: e, Name: Euler number, Napier's constant, Value: 2.718281
+
+Mathematical constants which value is less than 2.5:
+Key: Φ, Name: Golden ratio constant, Value: 1.618033
+Key: ρ, Name: Plastic number ρ (or silver constant), Value: 2.414213
+Key: γ, Name: Euler number, Napier's constant, Value: 0.577215
 ```
 
 ## How Fast?
