@@ -22,7 +22,7 @@ The goal is to provide a simple and easy way to use a library to store and retri
 
 ### Available Containers
 
-* [MapKeyValue[K comparable, T any]](https://pkg.go.dev/github.com/slashdevops/r9e#MapKeyValue)
+* [MapKeyValue[K comparable, T any]](https://pkg.go.dev/github.com/slashdevops/r9e#MapKeyValue) using `sync.RWMutex`
 
 ### Documentation
 

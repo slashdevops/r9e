@@ -55,8 +55,6 @@ func init() {
 	}
 }
 
-// **************************************************
-// ******************** Tests ***********************
 func TestNewMapKeyValue(t *testing.T) {
 	t.Run("test NewMapKeyValue[int, int] with capacity", func(t *testing.T) {
 		kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
@@ -1798,8 +1796,8 @@ func TestSortValues(t *testing.T) {
 	})
 }
 
-// **************************************************
-// ******************** Examples ********************
+// ************************************************************************************************
+// ************************* Examples ************************************************************
 
 // Using int data types
 func ExampleNewMapKeyValue_int() {
@@ -1833,45 +1831,8 @@ func ExampleNewMapKeyValue_struct() {
 	// name: This is Archimedes' Constant (Pi), value: 3.1415
 }
 
-// Using string as key and int as value data types.
-func Example() {
-	grades := NewMapKeyValue[string, float64]()
-
-	grades.Set("John Doe", 7.456)
-	grades.Set("Jane Doe", 9.876)
-	grades.Set("Donato Ricupero", 9.123)
-	grades.Set("Joe Blow", 9.123)
-	grades.Set("Joe Doakes", 9.123)
-	grades.Set("Joe Sixpack", 9.123)
-
-	// show elements
-	grades.ForEach(func(key string, value float64) {
-		fmt.Printf("name: %v, grade: %v\n", key, value)
-	})
-
-	// show values
-	values := grades.Values()
-	for _, value := range values {
-		fmt.Printf("grade: %v\n", value)
-	}
-
-	// show keys
-	keys := grades.Values()
-	for _, key := range keys {
-		fmt.Printf("student: %v\n", key)
-	}
-
-	filterValues := grades.Filter(func(key string, value float64) bool {
-		return value > 8
-	})
-
-	filterValues.ForEach(func(key string, value float64) {
-		fmt.Printf("name: %v, grade: %v\n", key, value)
-	})
-}
-
-// **************************************************
-// ******************** Benchmarks ******************
+// ************************************************************************************************
+// ************************* Benchmark ************************************************************
 func BenchmarkMapKeyValue_Set_int_int(b *testing.B) {
 	kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
 

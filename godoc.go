@@ -1,7 +1,9 @@
-// Package r9e provides a collection of memory store containers.
-//
-// this package include:
-//
-// MapKeyValue: a simple, fast, and efficient key-value store library.
-//
+/*
+Package r9e provides a collection of memory store containers.
+
+# Available Containers
+
+* [MapKeyValue[K comparable, T any]](https://pkg.go.dev/github.com/slashdevops/r9e#MapKeyValue) using sync.RWMutex
+
+*/
 package r9e
