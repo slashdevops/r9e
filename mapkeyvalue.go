@@ -165,8 +165,8 @@ func (r *MapKeyValue[K, T]) Values() []T {
 	return values
 }
 
-// Each calls the given function for each key-value pair in the container.
-func (r *MapKeyValue[K, T]) Each(fn func(key K, value T)) {
+// ForEach calls the given function for each key-value pair in the container.
+func (r *MapKeyValue[K, T]) ForEach(fn func(key K, value T)) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -175,8 +175,8 @@ func (r *MapKeyValue[K, T]) Each(fn func(key K, value T)) {
 	}
 }
 
-// EachKey calls the given function for each key in the container.
-func (r *MapKeyValue[K, T]) EachKey(fn func(key K)) {
+// ForEachKey calls the given function for each key in the container.
+func (r *MapKeyValue[K, T]) ForEachKey(fn func(key K)) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -185,8 +185,8 @@ func (r *MapKeyValue[K, T]) EachKey(fn func(key K)) {
 	}
 }
 
-// EachValue calls the given function for each value in the container.
-func (r *MapKeyValue[K, T]) EachValue(fn func(value T)) {
+// ForEachValue calls the given function for each value in the container.
+func (r *MapKeyValue[K, T]) ForEachValue(fn func(value T)) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

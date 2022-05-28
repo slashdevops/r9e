@@ -722,7 +722,7 @@ func TestEach(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
 		}
 
-		kv.Each(func(key string, value testStruct) {
+		kv.ForEach(func(key string, value testStruct) {
 			if key != "Archimedes" && key != "Euler" && key != "Golden Ratio" {
 				t.Errorf("Expected key to be %v, got %v", true, key)
 			}
@@ -744,7 +744,7 @@ func TestEach(t *testing.T) {
 		}
 		kv := NewMapKeyValue[string, testStruct]()
 
-		kv.Each(func(key string, value testStruct) {
+		kv.ForEach(func(key string, value testStruct) {
 			t.Errorf("Expected Each to not be called, got %v", true)
 		})
 	})
@@ -766,7 +766,7 @@ func TestEachKey(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
 		}
 
-		kv.EachKey(func(key string) {
+		kv.ForEachKey(func(key string) {
 			if key != "Archimedes" && key != "Euler" && key != "Golden Ratio" {
 				t.Errorf("Expected key to be %v, got %v", true, key)
 			}
@@ -780,7 +780,7 @@ func TestEachKey(t *testing.T) {
 		}
 		kv := NewMapKeyValue[string, testStruct]()
 
-		kv.EachKey(func(key string) {
+		kv.ForEachKey(func(key string) {
 			t.Errorf("Expected EachKey to not be called, got %v", true)
 		})
 	})
@@ -802,7 +802,7 @@ func TestEachValue(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 3, kv.Size())
 		}
 
-		kv.EachValue(func(value testStruct) {
+		kv.ForEachValue(func(value testStruct) {
 			if value.Name != "This is Archimedes' Constant (Pi)" && value.Name != "This is Euler's Number (e)" && value.Name != "This is The Golden Ratio" {
 				t.Errorf("Expected value to be %v, got %v", true, value)
 			}
@@ -820,7 +820,7 @@ func TestEachValue(t *testing.T) {
 		}
 		kv := NewMapKeyValue[string, testStruct]()
 
-		kv.EachValue(func(value testStruct) {
+		kv.ForEachValue(func(value testStruct) {
 			t.Errorf("Expected EachValue to not be called, got %v", true)
 		})
 	})
@@ -1096,7 +1096,7 @@ func TestMap(t *testing.T) {
 			return
 		})
 
-		newKv.Each(func(key string, value testStruct) {
+		newKv.ForEach(func(key string, value testStruct) {
 			if kv.Key(key) != key {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", strings.ToUpper(key), key)
 			}
@@ -1151,7 +1151,7 @@ func TestMapKey(t *testing.T) {
 			return strings.ToUpper(key)
 		})
 
-		newKv.Each(func(key string, value testStruct) {
+		newKv.ForEach(func(key string, value testStruct) {
 			if strings.ToUpper(kv.Key(strings.Title(strings.ToLower(key)))) != key {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(strings.Title(strings.ToLower(key))), key)
 			}
@@ -1206,7 +1206,7 @@ func TestMapValue(t *testing.T) {
 			return value
 		})
 
-		newKv.Each(func(key string, value testStruct) {
+		newKv.ForEach(func(key string, value testStruct) {
 			if kv.Key(key) != key {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1261,7 +1261,7 @@ func TestFilter(t *testing.T) {
 			return strings.Contains(value.Name, "Constant")
 		})
 
-		newKv.Each(func(key string, value testStruct) {
+		newKv.ForEach(func(key string, value testStruct) {
 			if key != "Archimedes" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1314,7 +1314,7 @@ func TestFilterKey(t *testing.T) {
 			return strings.Contains(key, "chime")
 		})
 
-		newKv.Each(func(key string, value testStruct) {
+		newKv.ForEach(func(key string, value testStruct) {
 			if key != "Archimedes" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1371,7 +1371,7 @@ func TestFilterValue(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 1, newKv.Size())
 		}
 
-		newKv.Each(func(key string, value testStruct) {
+		newKv.ForEach(func(key string, value testStruct) {
 			if key != "Archimedes" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1431,7 +1431,7 @@ func TestPartition(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 2, grp1Kv.Size())
 		}
 
-		grp1Kv.Each(func(key string, value testStruct) {
+		grp1Kv.ForEach(func(key string, value testStruct) {
 			if key != "Archimedes" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1443,7 +1443,7 @@ func TestPartition(t *testing.T) {
 			}
 		})
 
-		grp2Kv.Each(func(key string, value testStruct) {
+		grp2Kv.ForEach(func(key string, value testStruct) {
 			if key != "Euler" && key != "Golden Ratio" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1507,7 +1507,7 @@ func TestPartitionKey(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 2, grp1Kv.Size())
 		}
 
-		grp1Kv.Each(func(key string, value testStruct) {
+		grp1Kv.ForEach(func(key string, value testStruct) {
 			if key != "Archimedes" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1519,7 +1519,7 @@ func TestPartitionKey(t *testing.T) {
 			}
 		})
 
-		grp2Kv.Each(func(key string, value testStruct) {
+		grp2Kv.ForEach(func(key string, value testStruct) {
 			if key != "Euler" && key != "Golden Ratio" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1583,7 +1583,7 @@ func TestPartitionValue(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 2, grp1Kv.Size())
 		}
 
-		grp1Kv.Each(func(key string, value testStruct) {
+		grp1Kv.ForEach(func(key string, value testStruct) {
 			if key != "Archimedes" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1595,7 +1595,7 @@ func TestPartitionValue(t *testing.T) {
 			}
 		})
 
-		grp2Kv.Each(func(key string, value testStruct) {
+		grp2Kv.ForEach(func(key string, value testStruct) {
 			if key != "Euler" && key != "Golden Ratio" {
 				t.Errorf("Expected key to be uppercase, want: %v, got %v", kv.Key(key), key)
 			}
@@ -1783,7 +1783,7 @@ func Example() {
 	grades.Set("Joe Sixpack", 9.123)
 
 	// show elements
-	grades.Each(func(key string, value float64) {
+	grades.ForEach(func(key string, value float64) {
 		fmt.Printf("name: %v, grade: %v\n", key, value)
 	})
 
@@ -1803,7 +1803,7 @@ func Example() {
 		return value > 8
 	})
 
-	filterValues.Each(func(key string, value float64) {
+	filterValues.ForEach(func(key string, value float64) {
 		fmt.Printf("name: %v, grade: %v\n", key, value)
 	})
 }

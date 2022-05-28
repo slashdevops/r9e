@@ -6,6 +6,7 @@
     "Println",
     "Ramstorag",
     "Ricupero",
-    "Sixpack"
+    "Sixpack",
+    "struct"
   ]
 }

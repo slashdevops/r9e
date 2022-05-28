@@ -80,7 +80,7 @@ func main() {
   })
 
   fmt.Println("Mathematical Constants:")
-  kvFilteredValues.Each(func(key string, value MathematicalConstants) {
+  kvFilteredValues.ForEach(func(key string, value MathematicalConstants) {
     fmt.Printf("Key: %v, Name: %v, Value: %v\n", key, value.Name, value.Value)
   })
 
@@ -104,13 +104,13 @@ func main() {
 
   fmt.Printf("\n")
   fmt.Printf("Mathematical constants which value is greater than 2.5:\n")
-  kvHigh.Each(func(key string, value MathematicalConstants) {
+  kvHigh.ForEach(func(key string, value MathematicalConstants) {
     fmt.Printf("Key: %v, Name: %v, Value: %v\n", key, value.Name, value.Value)
   })
 
   fmt.Printf("\n")
   fmt.Printf("Mathematical constants which value is less than 2.5:\n")
-  kvLow.Each(func(key string, value MathematicalConstants) {
+  kvLow.ForEach(func(key string, value MathematicalConstants) {
     fmt.Printf("Key: %v, Name: %v, Value: %v\n", key, value.Name, value.Value)
   })
 }
