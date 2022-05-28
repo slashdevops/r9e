@@ -72,6 +72,18 @@ func (r *MapKeyValue[K, T]) Get(key K) T {
 	return r.data[key]
 }
 
+// GetAnDelete returns the value associated with the key and delete it if the key exist
+// if the key doesn't exist return the given key value false
+func (r *MapKeyValue[K, T]) GetAnDelete(key K) (T, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	current, loaded := r.data[key]
+	if loaded {
+		delete(r.data, key)
+	}
+	return current, loaded
+}
+
 // Delete deletes the value associated with the key.
 func (r *MapKeyValue[K, T]) Delete(key K) {
 	r.mu.Lock()
