@@ -22,11 +22,11 @@ The goal is to provide a simple and easy way to use a library to store and retri
 
 ### Available Containers
 
-* `MapKeyValue[K comparable, T any]`
+* [MapKeyValue[K comparable, T any]](https://pkg.go.dev/github.com/slashdevops/r9e#MapKeyValue)
 
 ### Documentation
 
-Official documentation is available on [godoc](https://pkg.go.dev/github.com/slashdevops/r9e)
+Official documentation is available on [pkg.go.dev -> slashdevops/r9e](https://pkg.go.dev/github.com/slashdevops/r9e)
 
 ## Installing
 
@@ -65,7 +65,9 @@ func main() {
     Value float64
   }
 
-  kv := r9e.NewMapKeyValue[string, MathematicalConstants](r9e.WithCapacity(10))
+  // With Capacity allocated
+  //kv := r9e.NewMapKeyValue[string, MathematicalConstants](r9e.WithCapacity(5))
+  kv := r9e.NewMapKeyValue[string, MathematicalConstants]()
 
   kv.Set("pi", MathematicalConstants{"Archimedes' constant", 3.141592})
   kv.Set("e", MathematicalConstants{"Euler number, Napier's constant", 2.718281})
