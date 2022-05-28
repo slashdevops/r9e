@@ -16,7 +16,7 @@ This is focused on `usability and simplicity` rather than performance, but it do
 
 ## Overview
 
-Taking advantage of the [Golang Generics](https://go.dev/blog/intro-generics) and internal golang data structures like [sync.Map](https://golang.org/pkg/sync/#Map), `RamStorage (r9e)` provides a simple way to store and retrieve data.
+Taking advantage of the [Golang Generics](https://go.dev/blog/intro-generics) and internal golang data structures like [Map](https://go.dev/blog/maps), `RamStorage (r9e)` provides a simple way to store and retrieve data.
 
 The goal is to provide a simple and easy way to use a library to store and retrieve data from memory using a simple API and data structures.
 

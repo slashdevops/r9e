@@ -37,7 +37,7 @@ test-coverage: test
 	go tool cover -html=coverage.out
 
 bench:
-	go test -bench=. -benchmem
+	go test -bench=. -benchmem -benchtime=3s
 
 clean:
 	rm -rf ./*.out

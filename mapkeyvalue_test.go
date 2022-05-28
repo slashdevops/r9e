@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -1906,4 +1907,37 @@ func BenchmarkMapKeyValue_Set_Get_string_struct(b *testing.B) {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
 		kv.Get(keyval)
 	}
+}
+
+func BenchmarkMapKeyValue_Set_Get_string_struct_concurrent(b *testing.B) {
+	kv := NewMapKeyValue[string, TestStruct](WithCapacity(kvSize))
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		for i := 0; i < b.N; i++ {
+			keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
+			s := TestStruct{
+				a: keyval,
+				b: rand.Intn(kvSize),
+				c: int64(rand.Intn(kvSize)),
+				d: rand.Float64(),
+			}
+			kv.Set(keyval, s)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		for i := 0; i < b.N; i++ {
+			keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
+			kv.Get(keyval)
+		}
+	}()
+
+	wg.Done()
+	wg.Done()
+
+	wg.Wait()
 }
