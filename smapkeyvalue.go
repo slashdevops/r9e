@@ -1,7 +1,6 @@
 package r9e
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 	"sync"
@@ -186,7 +185,6 @@ func (r *SMapKeyValue[K, T]) Clone() *SMapKeyValue[K, T] {
 	clone := NewSMapKeyValue[K, T]()
 
 	r.data.Range(func(key, value any) bool {
-		fmt.Printf("%v, %v\n", key, value)
 		clone.Set(key.(K), value.(T))
 		return true
 	})
