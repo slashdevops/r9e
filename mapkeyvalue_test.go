@@ -1015,7 +1015,7 @@ func TestCloneAndClear_MapKeyValue(t *testing.T) {
 }
 
 func TestDeepEqual_MapKeyValue(t *testing.T) {
-	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
+	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys disordered and same size", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
 			value float64
@@ -1027,9 +1027,9 @@ func TestDeepEqual_MapKeyValue(t *testing.T) {
 		kv1.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
 		kv1.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
 
+		kv2.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
 		kv2.Set("Archimedes", testStruct{"This is Archimedes' Constant (Pi)", 3.1415})
 		kv2.Set("Euler", testStruct{"This is Euler's Number (e)", 2.7182})
-		kv2.Set("Golden Ratio", testStruct{"This is The Golden Ratio", 1.6180})
 
 		if kv1.Size() != 3 {
 			t.Errorf("Expected size to be %v, got %v", 3, kv1.Size())
@@ -1039,11 +1039,11 @@ func TestDeepEqual_MapKeyValue(t *testing.T) {
 		}
 
 		if kv1.DeepEqual(kv2) == false {
-			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+			t.Errorf("Expected DeepEqual to be equal, got %v", kv1.DeepEqual(kv2))
 		}
 
 		if kv2.DeepEqual(kv1) == false {
-			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+			t.Errorf("Expected DeepEqual to be equal, got %v", kv2.DeepEqual(kv1))
 		}
 	})
 
@@ -1071,15 +1071,15 @@ func TestDeepEqual_MapKeyValue(t *testing.T) {
 		}
 
 		if kv1.DeepEqual(kv2) == true {
-			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+			t.Errorf("Expected DeepEqual to be different, got %v", kv1.DeepEqual(kv2))
 		}
 
 		if kv2.DeepEqual(kv1) == true {
-			t.Errorf("Expected DeepEqual to be equal, got %v", true)
+			t.Errorf("Expected DeepEqual to be different, got %v", kv2.DeepEqual(kv1))
 		}
 	})
 
-	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys and it is not equal different size", func(t *testing.T) {
+	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys and it is different and different size", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
 			value float64
