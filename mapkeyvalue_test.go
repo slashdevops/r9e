@@ -178,7 +178,7 @@ func TestNewMapKeyValue(t *testing.T) {
 	})
 }
 
-func TestSet(t *testing.T) {
+func TestSet_MapKeyValue(t *testing.T) {
 	t.Run("test Set for NewMapKeyValue[string, struct] key exist", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -203,7 +203,7 @@ func TestSet(t *testing.T) {
 	})
 }
 
-func TestGetAndCheck(t *testing.T) {
+func TestGetAndCheck_MapKeyValue(t *testing.T) {
 	t.Run("test GetAndCheck for NewMapKeyValue[string, struct] key exist", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -250,7 +250,7 @@ func TestGetAndCheck(t *testing.T) {
 	})
 }
 
-func TestGet(t *testing.T) {
+func TestGet_MapKeyValue(t *testing.T) {
 	t.Run("test Get for NewMapKeyValue[string, struct] key exist", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -294,7 +294,7 @@ func TestGet(t *testing.T) {
 	})
 }
 
-func TestGetAnDelete(t *testing.T) {
+func TestGetAnDelete_MapKeyValue(t *testing.T) {
 	t.Run("test GetAnDelete for NewMapKeyValue[string, struct] key exist", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -355,7 +355,7 @@ func TestGetAnDelete(t *testing.T) {
 	})
 }
 
-func TestDelete(t *testing.T) {
+func TestDelete_MapKeyValue(t *testing.T) {
 	t.Run("test Delete for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -415,7 +415,7 @@ func TestDelete(t *testing.T) {
 	})
 }
 
-func TestClear(t *testing.T) {
+func TestClear_MapKeyValue(t *testing.T) {
 	t.Run("test Clear for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -466,7 +466,7 @@ func TestClear(t *testing.T) {
 	})
 }
 
-func TestSize(t *testing.T) {
+func TestSize_MapKeyValue(t *testing.T) {
 	t.Run("test Size for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -520,7 +520,7 @@ func TestSize(t *testing.T) {
 	})
 }
 
-func TestIsEmpty(t *testing.T) {
+func TestIsEmpty_MapKeyValue(t *testing.T) {
 	t.Run("test IsEmpty for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -548,7 +548,7 @@ func TestIsEmpty(t *testing.T) {
 	})
 }
 
-func TestIsFull(t *testing.T) {
+func TestIsFull_MapKeyValue(t *testing.T) {
 	t.Run("test IsFull for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -576,7 +576,7 @@ func TestIsFull(t *testing.T) {
 	})
 }
 
-func TestContainsKey(t *testing.T) {
+func TestContainsKey_MapKeyValue(t *testing.T) {
 	t.Run("test ContainsKey for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -612,7 +612,7 @@ func TestContainsKey(t *testing.T) {
 	})
 }
 
-func TestContainsValue(t *testing.T) {
+func TestContainsValue_MapKeyValue(t *testing.T) {
 	t.Run("test ContainsValue for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -648,7 +648,7 @@ func TestContainsValue(t *testing.T) {
 	})
 }
 
-func TestKey(t *testing.T) {
+func TestKey_MapKeyValue(t *testing.T) {
 	t.Run("test Key for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -674,7 +674,7 @@ func TestKey(t *testing.T) {
 	})
 }
 
-func TestKeys(t *testing.T) {
+func TestKeys_MapKeyValue(t *testing.T) {
 	t.Run("test Keys for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -718,7 +718,7 @@ func TestKeys(t *testing.T) {
 	})
 }
 
-func TestValues(t *testing.T) {
+func TestValues_MapKeyValue(t *testing.T) {
 	t.Run("test Values for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -766,7 +766,7 @@ func TestValues(t *testing.T) {
 	})
 }
 
-func TestEach(t *testing.T) {
+func TestEach_MapKeyValue(t *testing.T) {
 	t.Run("test Each for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -810,7 +810,7 @@ func TestEach(t *testing.T) {
 	})
 }
 
-func TestEachKey(t *testing.T) {
+func TestEachKey_MapKeyValue(t *testing.T) {
 	t.Run("test EachKey for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -846,7 +846,7 @@ func TestEachKey(t *testing.T) {
 	})
 }
 
-func TestEachValue(t *testing.T) {
+func TestEachValue_MapKeyValue(t *testing.T) {
 	t.Run("test EachValue for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -886,7 +886,7 @@ func TestEachValue(t *testing.T) {
 	})
 }
 
-func TestClone(t *testing.T) {
+func TestClone_MapKeyValue(t *testing.T) {
 	t.Run("test Clone for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -950,7 +950,7 @@ func TestClone(t *testing.T) {
 	})
 }
 
-func TestCloneAndClear(t *testing.T) {
+func TestCloneAndClear_MapKeyValue(t *testing.T) {
 	t.Run("test CloneAndClear for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1014,7 +1014,7 @@ func TestCloneAndClear(t *testing.T) {
 	})
 }
 
-func TestDeepEqual(t *testing.T) {
+func TestDeepEqual_MapKeyValue(t *testing.T) {
 	t.Run("test DeepEqual for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1133,7 +1133,7 @@ func TestDeepEqual(t *testing.T) {
 	})
 }
 
-func TestMap(t *testing.T) {
+func TestMap_MapKeyValue(t *testing.T) {
 	t.Run("test Map for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1191,7 +1191,7 @@ func TestMap(t *testing.T) {
 	})
 }
 
-func TestMapKey(t *testing.T) {
+func TestMapKey_MapKeyValue(t *testing.T) {
 	t.Run("test MapKey for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1244,7 +1244,7 @@ func TestMapKey(t *testing.T) {
 	})
 }
 
-func TestMapValue(t *testing.T) {
+func TestMapValue_MapKeyValue(t *testing.T) {
 	t.Run("test MapValue for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1301,7 +1301,7 @@ func TestMapValue(t *testing.T) {
 	})
 }
 
-func TestFilter(t *testing.T) {
+func TestFilter_MapKeyValue(t *testing.T) {
 	t.Run("test Filter for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1354,7 +1354,7 @@ func TestFilter(t *testing.T) {
 	})
 }
 
-func TestFilterKey(t *testing.T) {
+func TestFilterKey_MapKeyValue(t *testing.T) {
 	t.Run("test FilterKey for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1407,7 +1407,7 @@ func TestFilterKey(t *testing.T) {
 	})
 }
 
-func TestFilterValue(t *testing.T) {
+func TestFilterValue_MapKeyValue(t *testing.T) {
 	t.Run("test FilterValue for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1464,7 +1464,7 @@ func TestFilterValue(t *testing.T) {
 	})
 }
 
-func TestPartition(t *testing.T) {
+func TestPartition_MapKeyValue(t *testing.T) {
 	t.Run("test Partition for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1540,7 +1540,7 @@ func TestPartition(t *testing.T) {
 	})
 }
 
-func TestPartitionKey(t *testing.T) {
+func TestPartitionKey_MapKeyValue(t *testing.T) {
 	t.Run("test PartitionKey for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1616,7 +1616,7 @@ func TestPartitionKey(t *testing.T) {
 	})
 }
 
-func TestPartitionValue(t *testing.T) {
+func TestPartitionValue_MapKeyValue(t *testing.T) {
 	t.Run("test PartitionValue for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1692,7 +1692,7 @@ func TestPartitionValue(t *testing.T) {
 	})
 }
 
-func TestSortKeys(t *testing.T) {
+func TestSortKeys_MapKeyValue(t *testing.T) {
 	t.Run("test SortKeys for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
@@ -1741,7 +1741,7 @@ func TestSortKeys(t *testing.T) {
 	})
 }
 
-func TestSortValues(t *testing.T) {
+func TestSortValues_MapKeyValue(t *testing.T) {
 	t.Run("test SortValues for NewMapKeyValue[string, struct] with keys", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
