@@ -1836,6 +1836,7 @@ func ExampleNewMapKeyValue_struct() {
 func BenchmarkMapKeyValue_Set_int_int(b *testing.B) {
 	kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		kv.Set(rand.Intn(kvSize), rand.Intn(kvSize))
 	}
@@ -1850,6 +1851,7 @@ func BenchmarkMapKeyValue_Get_int_int(b *testing.B) {
 func BenchmarkMapKeyValue_Set_Get_int_int(b *testing.B) {
 	kv := NewMapKeyValue[int, int](WithCapacity(kvSize))
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		kv.Set(rand.Intn(kvSize), rand.Intn(kvSize))
 	}
@@ -1862,6 +1864,7 @@ func BenchmarkMapKeyValue_Set_Get_int_int(b *testing.B) {
 func BenchmarkMapKeyValue_Set_string_string(b *testing.B) {
 	kv := NewMapKeyValue[string, string](WithCapacity(kvSize))
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
 		kv.Set(keyval, keyval)
@@ -1878,6 +1881,7 @@ func BenchmarkMapKeyValue_Get_string_string(b *testing.B) {
 func BenchmarkMapKeyValue_Set_Get_string_string(b *testing.B) {
 	kv := NewMapKeyValue[string, string](WithCapacity(kvSize))
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
 		kv.Set(keyval, keyval)
@@ -1892,6 +1896,7 @@ func BenchmarkMapKeyValue_Set_Get_string_string(b *testing.B) {
 func BenchmarkMapKeyValue_Set_string_struct(b *testing.B) {
 	kv := NewMapKeyValue[string, TestStruct](WithCapacity(kvSize))
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
 		s := TestStruct{
@@ -1914,6 +1919,7 @@ func BenchmarkMapKeyValue_Get_string_struct(b *testing.B) {
 func BenchmarkMapKeyValue_Set_Get_string_struct(b *testing.B) {
 	kv := NewMapKeyValue[string, TestStruct](WithCapacity(kvSize))
 
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
 		s := TestStruct{
@@ -1936,9 +1942,9 @@ func BenchmarkMapKeyValue_Set_Get_string_struct_concurrent(b *testing.B) {
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		for i := 0; i < b.N; i++ {
+	for i := 0; i < b.N; i++ {
+		wg.Add(1)
+		go func() {
 			keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
 			s := TestStruct{
 				a: keyval,
@@ -1947,19 +1953,19 @@ func BenchmarkMapKeyValue_Set_Get_string_struct_concurrent(b *testing.B) {
 				d: rand.Float64(),
 			}
 			kv.Set(keyval, s)
-		}
-	}()
+		}()
+		wg.Done()
+	}
 
-	wg.Add(1)
-	go func() {
-		for i := 0; i < b.N; i++ {
-			keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
+	for i := 0; i < b.N; i++ {
+		wg.Add(1)
+
+		keyval := fmt.Sprintf("%x", md5.Sum([]byte(strconv.Itoa(rand.Intn(kvSize)))))
+		go func() {
 			kv.Get(keyval)
-		}
-	}()
-
-	wg.Done()
-	wg.Done()
+		}()
+		wg.Done()
+	}
 
 	wg.Wait()
 }
