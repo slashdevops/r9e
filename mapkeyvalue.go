@@ -65,6 +65,7 @@ func (r *MapKeyValue[K, T]) GetAndCheck(key K) (T, bool) {
 }
 
 // Get returns the value associated with the key.
+// If the key does not exist, return zero value of the type.
 func (r *MapKeyValue[K, T]) Get(key K) T {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
