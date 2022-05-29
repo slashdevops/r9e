@@ -54,9 +54,9 @@ func (r *MapKeyValue[K, T]) Set(key K, value T) {
 	r.data[key] = value
 }
 
-// GetCheck returns the value associated with the key if this exist also a
+// GetAndCheck returns the value associated with the key if this exist also a
 // boolean value if this exist of not.
-func (r *MapKeyValue[K, T]) GetCheck(key K) (T, bool) {
+func (r *MapKeyValue[K, T]) GetAndCheck(key K) (T, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -65,6 +65,7 @@ func (r *MapKeyValue[K, T]) GetCheck(key K) (T, bool) {
 }
 
 // Get returns the value associated with the key.
+// If the key does not exist, return zero value of the type.
 func (r *MapKeyValue[K, T]) Get(key K) T {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
