@@ -203,8 +203,8 @@ func TestSet(t *testing.T) {
 	})
 }
 
-func TestGetCheck(t *testing.T) {
-	t.Run("test GetCheck for NewMapKeyValue[string, struct] key exist", func(t *testing.T) {
+func TestGetAndCheck(t *testing.T) {
+	t.Run("test GetAndCheck for NewMapKeyValue[string, struct] key exist", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
 			value float64
@@ -217,9 +217,9 @@ func TestGetCheck(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
 		}
 
-		value, ok := kv.GetCheck("Archimedes")
+		value, ok := kv.GetAndCheck("Archimedes")
 		if !ok {
-			t.Errorf("Expected GetCheck to return true, got %v", ok)
+			t.Errorf("Expected GetAndCheck to return true, got %v", ok)
 		}
 
 		if value.Name != "This is Archimedes' Constant (Pi)" {
@@ -230,7 +230,7 @@ func TestGetCheck(t *testing.T) {
 		}
 	})
 
-	t.Run("test GetCheck for NewMapKeyValue[string, struct] key doesn't exist", func(t *testing.T) {
+	t.Run("test GetAndCheck for NewMapKeyValue[string, struct] key doesn't exist", func(t *testing.T) {
 		type testStruct struct {
 			Name  string
 			value float64
@@ -243,9 +243,9 @@ func TestGetCheck(t *testing.T) {
 			t.Errorf("Expected size to be %v, got %v", 1, kv.Size())
 		}
 
-		_, ok := kv.GetCheck("Euler")
+		_, ok := kv.GetAndCheck("Euler")
 		if ok {
-			t.Errorf("Expected GetCheck to return true, got %v", ok)
+			t.Errorf("Expected GetAndCheck to return true, got %v", ok)
 		}
 	})
 }
