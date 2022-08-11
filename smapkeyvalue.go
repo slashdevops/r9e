@@ -67,6 +67,7 @@ func (r *SMapKeyValue[K, T]) GetAnDelete(key K) (T, bool) {
 	value, ok := r.data.LoadAndDelete(key)
 	if ok {
 		r.count.Swap(r.count.Load() - 1)
+
 	}
 
 	switch value := value.(type) {
