@@ -8,7 +8,7 @@ on:
       - v[0-9].[0-9]+.[0-9]*
 
 env:
-  GO_VERSION: 1.18
+  GO_VERSION: 1.19
 
 permissions:
   id-token: write
@@ -29,7 +29,7 @@ jobs:
         id: go
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Test
         run: make test
@@ -46,7 +46,7 @@ jobs:
         id: go
 
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Show workspace files
         run: tree .
