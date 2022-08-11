@@ -10,7 +10,7 @@ import (
 // SMapKeyValue is a generic key-value store container that is thread-safe.
 // This use a golang native sync.Map data structure as underlying data structure.
 type SMapKeyValue[K comparable, T any] struct {
-	count uint64
+	count atomic.Uint64
 	data  sync.Map
 }
 
@@ -23,14 +23,13 @@ type skv[K comparable, T any] struct {
 // NewSMapKeyValue returns a new SMapKeyValue container.
 func NewSMapKeyValue[K comparable, T any]() *SMapKeyValue[K, T] {
 	return &SMapKeyValue[K, T]{
-		count: 0,
-		data:  sync.Map{},
+		data: sync.Map{},
 	}
 }
 
 // Set sets the value associated with the key.
 func (r *SMapKeyValue[K, T]) Set(key K, value T) {
-	atomic.AddUint64(&r.count, 1)
+	r.count.Add(1)
 	r.data.Store(key, value)
 }
 
@@ -67,7 +66,7 @@ func (r *SMapKeyValue[K, T]) Get(key K) T {
 func (r *SMapKeyValue[K, T]) GetAnDelete(key K) (T, bool) {
 	value, ok := r.data.LoadAndDelete(key)
 	if ok {
-		atomic.SwapUint64(&r.count, r.count-1)
+		r.count.Swap(r.count.Load() - 1)
 	}
 
 	switch value := value.(type) {
@@ -82,19 +81,19 @@ func (r *SMapKeyValue[K, T]) GetAnDelete(key K) (T, bool) {
 // Delete deletes the value associated with the key.
 func (r *SMapKeyValue[K, T]) Delete(key K) {
 	if _, ok := r.data.LoadAndDelete(key); ok {
-		atomic.SwapUint64(&r.count, r.count-1)
+		r.count.Swap(r.count.Load() - 1)
 	}
 }
 
 // Clear deletes all key-value pairs stored in the container.
 func (r *SMapKeyValue[K, T]) Clear() {
 	r.data = sync.Map{}
-	atomic.SwapUint64(&r.count, 0)
+	r.count.Swap(0)
 }
 
 // Size returns the number of key-value pairs stored in the container.
 func (r *SMapKeyValue[K, T]) Size() int {
-	return int(r.count)
+	return int(r.count.Load())
 }
 
 // IsEmpty returns true if the container is empty.
