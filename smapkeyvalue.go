@@ -1,162 +1,168 @@
 package r9e
 
 import (
+	"encoding/json"
+	"iter"
 	"reflect"
-	"sort"
+	"slices"
 	"sync"
 	"sync/atomic"
 )
 
-// SMapKeyValue is a generic key-value store container that is thread-safe.
-// This use a golang native sync.Map data structure as underlying data structure.
+// SMapKeyValue is a thread-safe, generic key-value container backed by a
+// [sync.Map]. It keeps an atomic entry counter so [SMapKeyValue.Size] is O(1).
+//
+// Prefer SMapKeyValue for workloads where many goroutines write disjoint keys,
+// or where a key is written once and read many times, matching the cases
+// sync.Map is optimized for. For read-heavy or mixed workloads that also need
+// consistent bulk snapshots, [MapKeyValue] is usually simpler and faster.
+//
+// The zero value is not ready for use; construct one with [NewSMapKeyValue].
 type SMapKeyValue[K comparable, T any] struct {
-	count atomic.Uint64
+	count atomic.Int64
 	data  sync.Map
 }
 
-// skv is a helper struct to sort the values of the SMapKeyValue container.
-type skv[K comparable, T any] struct {
-	key   K
-	value T
-}
-
-// NewSMapKeyValue returns a new SMapKeyValue container.
+// NewSMapKeyValue returns a ready-to-use SMapKeyValue.
 func NewSMapKeyValue[K comparable, T any]() *SMapKeyValue[K, T] {
-	return &SMapKeyValue[K, T]{
-		data: sync.Map{},
-	}
+	return &SMapKeyValue[K, T]{}
 }
 
-// Set sets the value associated with the key.
-func (r *SMapKeyValue[K, T]) Set(key K, value T) {
-	r.count.Add(1)
-	r.data.Store(key, value)
-}
-
-// GetAndCheck returns the value associated with the key if this exist also a
-// boolean value if this exist of not.
-func (r *SMapKeyValue[K, T]) GetAndCheck(key K) (T, bool) {
-	value, ok := r.data.Load(key)
-
-	switch value := value.(type) {
-	case T:
-		return value, ok
-	default:
-		var t T
-		return t, ok
-	}
-}
-
-// Get returns the value associated with the key.
-// If the key does not exist, return zero value of the type.
-func (r *SMapKeyValue[K, T]) Get(key K) T {
-	value, _ := r.data.Load(key)
-
-	switch value := value.(type) {
-	case T:
-		return value
-	default:
-		var t T
+// cast converts a value loaded from the underlying sync.Map back to T,
+// returning the zero value of T when the stored value is absent or of an
+// unexpected type.
+func cast[T any](v any) T {
+	if t, ok := v.(T); ok {
 		return t
 	}
+	var zero T
+	return zero
 }
 
-// GetAnDelete returns the value associated with the key and delete it if the key exist
-// if the key doesn't exist return the given key value false
-func (r *SMapKeyValue[K, T]) GetAnDelete(key K) (T, bool) {
-	value, ok := r.data.LoadAndDelete(key)
-	if ok {
-		r.count.Swap(r.count.Load() - 1)
-
-	}
-
-	switch value := value.(type) {
-	case T:
-		return value, ok
-	default:
-		var t T
-		return t, ok
+// Set stores value under key, replacing any existing value.
+func (r *SMapKeyValue[K, T]) Set(key K, value T) {
+	if _, loaded := r.data.Swap(key, value); !loaded {
+		r.count.Add(1)
 	}
 }
 
-// Delete deletes the value associated with the key.
+// Get returns the value stored under key, or the zero value of T if the key is
+// absent.
+func (r *SMapKeyValue[K, T]) Get(key K) T {
+	value, _ := r.data.Load(key)
+	return cast[T](value)
+}
+
+// GetAndCheck returns the value stored under key and a boolean reporting whether
+// the key was present.
+func (r *SMapKeyValue[K, T]) GetAndCheck(key K) (T, bool) {
+	value, ok := r.data.Load(key)
+	return cast[T](value), ok
+}
+
+// GetOrSet returns the existing value for key if present. Otherwise it stores
+// and returns value. The loaded result reports whether the value was already
+// present. The operation is atomic.
+func (r *SMapKeyValue[K, T]) GetOrSet(key K, value T) (actual T, loaded bool) {
+	v, loaded := r.data.LoadOrStore(key, value)
+	if !loaded {
+		r.count.Add(1)
+	}
+	return cast[T](v), loaded
+}
+
+// GetAndDelete returns the value stored under key and deletes it. The loaded
+// result reports whether the key was present.
+func (r *SMapKeyValue[K, T]) GetAndDelete(key K) (value T, loaded bool) {
+	v, loaded := r.data.LoadAndDelete(key)
+	if loaded {
+		r.count.Add(-1)
+	}
+	return cast[T](v), loaded
+}
+
+// Delete removes key from the container. Deleting an absent key is a no-op.
 func (r *SMapKeyValue[K, T]) Delete(key K) {
-	if _, ok := r.data.LoadAndDelete(key); ok {
-		r.count.Swap(r.count.Load() - 1)
+	if _, loaded := r.data.LoadAndDelete(key); loaded {
+		r.count.Add(-1)
 	}
 }
 
-// Clear deletes all key-value pairs stored in the container.
+// Clear removes all entries.
 func (r *SMapKeyValue[K, T]) Clear() {
-	r.data = sync.Map{}
-	r.count.Swap(0)
+	r.data.Clear()
+	r.count.Store(0)
 }
 
-// Size returns the number of key-value pairs stored in the container.
+// Size returns the number of entries stored. It is O(1).
 func (r *SMapKeyValue[K, T]) Size() int {
 	return int(r.count.Load())
 }
 
-// IsEmpty returns true if the container is empty.
+// IsEmpty reports whether the container has no entries.
 func (r *SMapKeyValue[K, T]) IsEmpty() bool {
 	return r.Size() == 0
 }
 
-// IsFull returns true if the container has elements.
-func (r *SMapKeyValue[K, T]) IsFull() bool {
-	return r.Size() != 0
-}
-
-// ContainsKey returns true if the key is in the container.
+// ContainsKey reports whether key is present.
 func (r *SMapKeyValue[K, T]) ContainsKey(key K) bool {
 	_, ok := r.data.Load(key)
 	return ok
 }
 
-// ContainsValue returns true if the value is in the container.
+// ContainsValue reports whether any stored value is deeply equal to value,
+// using [reflect.DeepEqual]. This is O(n) in the number of entries.
 func (r *SMapKeyValue[K, T]) ContainsValue(value T) bool {
-	var ret bool
-
-	r.data.Range(func(key, v any) bool {
+	found := false
+	r.data.Range(func(_, v any) bool {
 		if reflect.DeepEqual(v, value) {
-			ret = true
+			found = true
 			return false
 		}
 		return true
 	})
-	return ret
+	return found
 }
 
-// Get returns the key value associated with the key.
-func (r *SMapKeyValue[K, T]) Key(key K) K {
-	if _, ok := r.data.Load(key); ok {
-		return key
-	}
-	var empty K
-	return empty
-}
-
-// Keys returns all keys stored in the container.
+// Keys returns a snapshot slice of all keys. The order is unspecified.
 func (r *SMapKeyValue[K, T]) Keys() []K {
 	keys := make([]K, 0, r.Size())
-	r.data.Range(func(key, value any) bool {
+	r.data.Range(func(key, _ any) bool {
 		keys = append(keys, key.(K))
 		return true
 	})
 	return keys
 }
 
-// Values returns all values stored in the container.
+// Values returns a snapshot slice of all values. The order is unspecified.
 func (r *SMapKeyValue[K, T]) Values() []T {
 	values := make([]T, 0, r.Size())
-	r.data.Range(func(key, value any) bool {
+	r.data.Range(func(_, value any) bool {
 		values = append(values, value.(T))
 		return true
 	})
 	return values
 }
 
-// ForEach calls the given function for each key-value pair in the container.
+// All returns an iterator over all key-value pairs, suitable for use with a
+// range-over-func loop:
+//
+//	for k, v := range sm.All() {
+//		// ...
+//	}
+//
+// Iteration reflects a moment-in-time view of the map; concurrent writes may or
+// may not be observed. Break out of the loop early to stop iterating.
+func (r *SMapKeyValue[K, T]) All() iter.Seq2[K, T] {
+	return func(yield func(K, T) bool) {
+		r.data.Range(func(key, value any) bool {
+			return yield(key.(K), value.(T))
+		})
+	}
+}
+
+// ForEach calls fn for every key-value pair. Prefer [SMapKeyValue.All] with a
+// range-over-func loop in new code.
 func (r *SMapKeyValue[K, T]) ForEach(fn func(key K, value T)) {
 	r.data.Range(func(key, value any) bool {
 		fn(key.(K), value.(T))
@@ -164,141 +170,146 @@ func (r *SMapKeyValue[K, T]) ForEach(fn func(key K, value T)) {
 	})
 }
 
-// ForEachKey calls the given function for each key in the container.
+// ForEachKey calls fn for every key.
 func (r *SMapKeyValue[K, T]) ForEachKey(fn func(key K)) {
-	r.data.Range(func(key, value any) bool {
+	r.data.Range(func(key, _ any) bool {
 		fn(key.(K))
 		return true
 	})
 }
 
-// ForEachValue calls the given function for each value in the container.
+// ForEachValue calls fn for every value.
 func (r *SMapKeyValue[K, T]) ForEachValue(fn func(value T)) {
-	r.data.Range(func(key, value any) bool {
+	r.data.Range(func(_, value any) bool {
 		fn(value.(T))
 		return true
 	})
 }
 
-// Clone returns a new SMapKeyValue with a copy of the underlying data.
+// Clone returns a new independent container holding a copy of the data.
 func (r *SMapKeyValue[K, T]) Clone() *SMapKeyValue[K, T] {
 	clone := NewSMapKeyValue[K, T]()
-
 	r.data.Range(func(key, value any) bool {
 		clone.Set(key.(K), value.(T))
 		return true
 	})
-
 	return clone
 }
 
-// CloneAndClear returns a new SMapKeyValue with a copy of the underlying data and clears the container.
+// CloneAndClear copies the data into a new container and clears the receiver.
+// The two operations are not a single atomic step: concurrent writes that land
+// between the copy and the clear are observed by neither container reliably.
 func (r *SMapKeyValue[K, T]) CloneAndClear() *SMapKeyValue[K, T] {
-	clone := NewSMapKeyValue[K, T]()
-	r.data.Range(func(key, value any) bool {
-		clone.Set(key.(K), value.(T))
-		return true
-	})
+	clone := r.Clone()
 	r.Clear()
 	return clone
 }
 
-// DeepEqual returns true if the given kv is deep equal to the SMapKeyValue container
-func (r *SMapKeyValue[K, T]) DeepEqual(kv *SMapKeyValue[K, T]) bool {
-	if r.Size() != kv.Size() {
+// Merge copies every entry from other into the receiver, overwriting existing
+// keys. A nil other, or merging a container into itself, is ignored.
+func (r *SMapKeyValue[K, T]) Merge(other *SMapKeyValue[K, T]) {
+	if other == nil || other == r {
+		return
+	}
+	other.data.Range(func(key, value any) bool {
+		r.Set(key.(K), value.(T))
+		return true
+	})
+}
+
+// DeepEqual reports whether the receiver and other hold the same keys mapped to
+// deeply equal values ([reflect.DeepEqual]). A nil other equals the receiver
+// only when the receiver is empty.
+func (r *SMapKeyValue[K, T]) DeepEqual(other *SMapKeyValue[K, T]) bool {
+	otherSize := 0
+	if other != nil {
+		otherSize = other.Size()
+	}
+	if r.Size() != otherSize {
 		return false
 	}
-	if (r.Size() == kv.Size()) && r.Size() == 0 {
-		return true
-	}
 
-	var ret bool
+	equal := true
 	r.data.Range(func(key, value any) bool {
-		kk, ok := kv.GetAndCheck(key.(K))
-		if !ok {
-			ret = false
+		ov, ok := other.GetAndCheck(key.(K))
+		if !ok || !reflect.DeepEqual(value.(T), ov) {
+			equal = false
 			return false
-		} else {
-			ret = reflect.DeepEqual(kk, value.(T))
-			return true
 		}
-	})
-
-	return ret
-}
-
-// Map returns a new SMapKeyValue after applying the given function fn to each key-value pair.
-func (r *SMapKeyValue[K, T]) Map(fn func(key K, value T) (newKey K, newValue T)) *SMapKeyValue[K, T] {
-	m := NewSMapKeyValue[K, T]()
-	r.data.Range(func(key, value any) bool {
-		newKey, newValue := fn(key.(K), value.(T))
-		m.Set(newKey, newValue)
 		return true
 	})
-
-	return m
+	return equal
 }
 
-// MapKey returns a new SMapKeyValue after applying the given function fn to each key.
+// Map returns a new container produced by applying fn to every pair.
+func (r *SMapKeyValue[K, T]) Map(fn func(key K, value T) (K, T)) *SMapKeyValue[K, T] {
+	out := NewSMapKeyValue[K, T]()
+	r.data.Range(func(key, value any) bool {
+		nk, nv := fn(key.(K), value.(T))
+		out.Set(nk, nv)
+		return true
+	})
+	return out
+}
+
+// MapKey returns a new container with each key transformed by fn.
 func (r *SMapKeyValue[K, T]) MapKey(fn func(key K) K) *SMapKeyValue[K, T] {
-	m := NewSMapKeyValue[K, T]()
+	out := NewSMapKeyValue[K, T]()
 	r.data.Range(func(key, value any) bool {
-		newKey := fn(key.(K))
-		m.Set(newKey, value.(T))
+		out.Set(fn(key.(K)), value.(T))
 		return true
 	})
-	return m
+	return out
 }
 
-// MapValue returns a new SMapKeyValue after applying the given function fn to each value.
+// MapValue returns a new container with each value transformed by fn.
 func (r *SMapKeyValue[K, T]) MapValue(fn func(value T) T) *SMapKeyValue[K, T] {
-	m := NewSMapKeyValue[K, T]()
+	out := NewSMapKeyValue[K, T]()
 	r.data.Range(func(key, value any) bool {
-		newValue := fn(value.(T))
-		m.Set(key.(K), newValue)
+		out.Set(key.(K), fn(value.(T)))
 		return true
 	})
-	return m
+	return out
 }
 
-// Filter returns a new SMapKeyValue after applying the given function fn to each key-value pair.
+// Filter returns a new container with the pairs for which fn reports true.
 func (r *SMapKeyValue[K, T]) Filter(fn func(key K, value T) bool) *SMapKeyValue[K, T] {
-	m := NewSMapKeyValue[K, T]()
+	out := NewSMapKeyValue[K, T]()
 	r.data.Range(func(key, value any) bool {
 		if fn(key.(K), value.(T)) {
-			m.Set(key.(K), value.(T))
+			out.Set(key.(K), value.(T))
 		}
 		return true
 	})
-	return m
+	return out
 }
 
-// FilterKey returns a new SMapKeyValue after applying the given function fn to each key.
+// FilterKey returns a new container with the pairs whose key satisfies fn.
 func (r *SMapKeyValue[K, T]) FilterKey(fn func(key K) bool) *SMapKeyValue[K, T] {
-	m := NewSMapKeyValue[K, T]()
+	out := NewSMapKeyValue[K, T]()
 	r.data.Range(func(key, value any) bool {
 		if fn(key.(K)) {
-			m.Set(key.(K), value.(T))
+			out.Set(key.(K), value.(T))
 		}
 		return true
 	})
-	return m
+	return out
 }
 
-// FilterValue returns a new SMapKeyValue after applying the given function fn to each value.
+// FilterValue returns a new container with the pairs whose value satisfies fn.
 func (r *SMapKeyValue[K, T]) FilterValue(fn func(value T) bool) *SMapKeyValue[K, T] {
-	m := NewSMapKeyValue[K, T]()
+	out := NewSMapKeyValue[K, T]()
 	r.data.Range(func(key, value any) bool {
 		if fn(value.(T)) {
-			m.Set(key.(K), value.(T))
+			out.Set(key.(K), value.(T))
 		}
 		return true
 	})
-	return m
+	return out
 }
 
-// Partition returns two new SMapKeyValue. One with all the elements that satisfy the predicate and
-// another with the rest. The predicate is applied to each element.
+// Partition splits the container into match (pairs for which fn is true) and
+// others (the rest), returning two new containers.
 func (r *SMapKeyValue[K, T]) Partition(fn func(key K, value T) bool) (match, others *SMapKeyValue[K, T]) {
 	match = NewSMapKeyValue[K, T]()
 	others = NewSMapKeyValue[K, T]()
@@ -310,12 +321,10 @@ func (r *SMapKeyValue[K, T]) Partition(fn func(key K, value T) bool) (match, oth
 		}
 		return true
 	})
-
-	return
+	return match, others
 }
 
-// PartitionKey returns two new SMapKeyValue. One with all the elements that satisfy the predicate and
-// another with the rest. The predicate is applied to each key.
+// PartitionKey splits the container by applying fn to each key.
 func (r *SMapKeyValue[K, T]) PartitionKey(fn func(key K) bool) (match, others *SMapKeyValue[K, T]) {
 	match = NewSMapKeyValue[K, T]()
 	others = NewSMapKeyValue[K, T]()
@@ -327,12 +336,10 @@ func (r *SMapKeyValue[K, T]) PartitionKey(fn func(key K) bool) (match, others *S
 		}
 		return true
 	})
-
-	return
+	return match, others
 }
 
-// PartitionValue returns two new SMapKeyValue. One with all the elements that satisfy the predicate and
-// another with the rest. The predicate is applied to each value.
+// PartitionValue splits the container by applying fn to each value.
 func (r *SMapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, others *SMapKeyValue[K, T]) {
 	match = NewSMapKeyValue[K, T]()
 	others = NewSMapKeyValue[K, T]()
@@ -344,41 +351,64 @@ func (r *SMapKeyValue[K, T]) PartitionValue(fn func(value T) bool) (match, other
 		}
 		return true
 	})
-	return
+	return match, others
 }
 
-// SortKeys returns a []*K (keys) after sorting the keys using the given sortFn function.
-func (r *SMapKeyValue[K, T]) SortKeys(sortFn func(key1, key2 K) bool) []*K {
+// SortKeys returns all keys sorted by the less function, which must report
+// whether a should sort before b.
+func (r *SMapKeyValue[K, T]) SortKeys(less func(a, b K) bool) []K {
 	keys := r.Keys()
-
-	sort.Slice(keys, func(i, j int) bool {
-		return sortFn(keys[i], keys[j])
+	slices.SortFunc(keys, func(a, b K) int {
+		switch {
+		case less(a, b):
+			return -1
+		case less(b, a):
+			return 1
+		default:
+			return 0
+		}
 	})
-
-	m := make([]*K, len(keys))
-	for i, key := range keys {
-		k := key
-		m[i] = &k
-	}
-	return m
+	return keys
 }
 
-// SortValues returns a []*T (values) after sorting the values using given function sortFn.
-func (r *SMapKeyValue[K, T]) SortValues(sortFn func(value1, value2 T) bool) []*T {
-	kvs := make([]*skv[K, T], 0, r.Size())
+// SortValues returns all values sorted by the less function, which must report
+// whether a should sort before b.
+func (r *SMapKeyValue[K, T]) SortValues(less func(a, b T) bool) []T {
+	values := r.Values()
+	slices.SortFunc(values, func(a, b T) int {
+		switch {
+		case less(a, b):
+			return -1
+		case less(b, a):
+			return 1
+		default:
+			return 0
+		}
+	})
+	return values
+}
+
+// MarshalJSON encodes the container as a JSON object. Encoding succeeds only for
+// key types that encoding/json accepts as object keys (strings, integers, and
+// encoding.TextMarshaler implementations).
+func (r *SMapKeyValue[K, T]) MarshalJSON() ([]byte, error) {
+	out := make(map[K]T, r.Size())
 	r.data.Range(func(key, value any) bool {
-		kvs = append(kvs, &skv[K, T]{key.(K), value.(T)})
+		out[key.(K)] = value.(T)
 		return true
 	})
+	return json.Marshal(out)
+}
 
-	sort.Slice(kvs, func(i, j int) bool {
-		return sortFn(kvs[i].value, kvs[j].value)
-	})
-
-	m := make([]*T, len(kvs))
-	for i, pair := range kvs {
-		m[i] = &pair.value
+// UnmarshalJSON decodes a JSON object into the container, merging the decoded
+// entries over any existing ones.
+func (r *SMapKeyValue[K, T]) UnmarshalJSON(data []byte) error {
+	var m map[K]T
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
 	}
-
-	return m
+	for key, value := range m {
+		r.Set(key, value)
+	}
+	return nil
 }

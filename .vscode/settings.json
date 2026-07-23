@@ -1,14 +1,16 @@
 {
   "cSpell.words": [
-    "codecov",
-    "Doakes",
-    "Donato",
-    "Gosec",
-    "keyval",
-    "Println",
-    "Ramstorag",
-    "Ricupero",
-    "Sixpack",
-    "struct"
-  ]
+    "betteralign",
+    "comparable",
+    "Errorf",
+    "gomod",
+    "nolint",
+    "RamStorage",
+    "slashdevops"
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "gofmt": true,
+    "test": true,
+    "actionlint": true
+  }
 }

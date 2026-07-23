@@ -1,19 +1,15 @@
 # Security Policy
 
+This project uses GitHub CodeQL to scan for security vulnerabilities.
+
+[![CodeQL Advanced](https://github.com/slashdevops/r9e/actions/workflows/codeql.yml/badge.svg)](https://github.com/slashdevops/r9e/actions/workflows/codeql.yml)
+
 ## Supported Versions
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.0.x   | :white_check_mark: |
-
+| Version | Supported |
+| ------- | --------- |
+| 1.0.x   | Yes       |
 
 ## Reporting a Vulnerability
 
-Use this section to tell people how to report a vulnerability.
-
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+Please report vulnerabilities through GitHub issues or the repository security advisory flow when available. Avoid posting sensitive exploit details publicly before maintainers have had time to respond.
