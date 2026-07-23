@@ -1,0 +1,58 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: ./go.mod
+          cache: true
+
+      - name: Summary Information
+        run: |
+          echo "# Pull Request Summary" > "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Repository:** ${{ github.repository }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Pull Request:** ${{ github.event.pull_request.title }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Author:** ${{ github.event.pull_request.user.login }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Branch:** ${{ github.event.pull_request.head.ref }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Base:** ${{ github.event.pull_request.base.ref }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Commits:** ${{ github.event.pull_request.commits }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Changed Files:** ${{ github.event.pull_request.changed_files }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Additions:** ${{ github.event.pull_request.additions }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Deletions:** ${{ github.event.pull_request.deletions }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Format check
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Test coverage
+        run: go tool cover -func=coverage.txt
+
+      - name: Build
+        run: go build ./...

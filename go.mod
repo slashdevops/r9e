@@ -1,3 +1,3 @@
 module github.com/slashdevops/r9e
 
-go 1.19
+go 1.26.0
